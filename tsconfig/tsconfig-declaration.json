@@ -6,7 +6,7 @@
         "noEmitOnError": false
     },
 	"files": [
-		"../src/json-tools.ts",
-		"../src/json-tools-browser.ts"
+		"../src/json-helpers.ts",
+		"../src/json-helpers-browser.ts"
 	]
 }

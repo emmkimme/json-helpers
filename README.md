@@ -1,10 +1,10 @@
-# json-tools
+# json-helpers
 Provide a new stringify/parser able to manage 'undefined', Date object and Buffer object.
 
 
 # Installation
 ```Batchfile
-npm install json-tools
+npm install json-helpers
 ```
 
 Dependencies
@@ -12,7 +12,7 @@ Dependencies
 
 # Sample
 ```js
-const json_tools = require('json-tools');
+const json_tools = require('json-helpers');
 
 let busEvent = {
       channel: '/electron-common-ipc/myChannel/myRequest',

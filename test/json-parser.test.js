@@ -2,7 +2,7 @@ const chai = require('chai');
 const assert = chai.assert;
 const expect = chai.expect;
 
-const json_tools = require('../lib/json-tools');
+const json_tools = require('../lib/json-helpers');
 
 const bigData = require('./big-data.json');
 
