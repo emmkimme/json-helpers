@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig-base",
+    "compilerOptions": {
+        "declaration": false
+    },
+	"files": [
+		"../src/json-tools.ts",
+		"../src/json-tools-browser.ts"
+	]
+}

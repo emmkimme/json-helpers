@@ -1,0 +1,65 @@
+{
+  "name": "json-tools",
+  "version": "1.0.0",
+  "description": "JSON stringify/parser managing 'undefined, Date and Buffer.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emmkimme/json-tools.git"
+  },
+  "keywords": [
+    "json",
+    "serialize",
+    "serializer",
+    "deserialize",
+    "deserializer",
+    "parse",
+    "parser",
+    "node",
+    "stringify",
+    "parse",
+    "buffer",
+    "date",
+    "undefined"
+  ],
+  "author": "Emmanuel Kimmerlin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emmkimme/json-tools/issues"
+  },
+  "homepage": "https://github.com/emmkimme/json-tools#readme",
+  "maintainers": [
+    {
+      "name": "Emmanuel Kimmerlin",
+      "email": "emmanuel.kimmerlin@thomsonreuters.com"
+    }
+  ],
+  "main": "./lib/json-tools.js",
+  "browser": "./lib/json-tools-browser.js",
+  "types": "./lib/json-tools.d.ts",
+  "devDependencies": {
+    "@types/node": "0.0.3",
+    "chai": "^4.1.2",
+    "del": "^2.2.2",
+    "del-cli": "^0.2.1",
+    "dts-bundle": "^0.6.1",
+    "mocha": "^4.0.1",
+    "sinon": "^4.0.1",
+    "tslint": "^4.1.1",
+    "tslint-microsoft-contrib": "^4.0.1",
+    "typescript": "^3.1.1"
+  },
+  "scripts": {
+    "clean": "del-cli ./lib ./build ./dist",
+    "build": "npm run build-js && npm run build-declaration",
+    "build-js": "tsc -p ./tsconfig/tsconfig-js.json",
+    "build-declaration": "npm run build-declaration-ts && npm run build-declaration-dts-bundle && npm run build-declaration-dts-bundle-browser && npm run clean-declaration-dts",
+    "build-declaration-ts": "tsc -p ./tsconfig/tsconfig-declaration.json",
+    "build-declaration-dts-bundle": "dts-bundle --outputAsModuleFolder --name json-tools --main ./lib/json-tools.d.ts",
+    "build-declaration-dts-bundle-browser": "dts-bundle --outputAsModuleFolder --name json-tools-browser --main ./lib/json-tools-browser.d.ts",
+    "clean-declaration-dts": "del-cli ./lib/code/*.d.ts",
+    "test": "mocha test --recursive",
+    "tsc": "tsc",
+    "tslint": "tslint",
+    "publication": "npm publish ./ --registry https://registry.npmjs.org/"
+  }
+}
