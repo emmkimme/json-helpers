@@ -32,11 +32,13 @@ export namespace JSONParser {
                 if (v === JSON_TOKEN_UNDEFINED) {
                     return undefined;
                 }
-                if (v.data && (v.type === 'Buffer')) {
-                    return Buffer.from(v.data);
-                }
-                if (v.data && (v.type === 'Date')) {
-                    return new Date(v.data);
+                if (v.data && v.type) {
+                    if (v.type === 'Buffer') {
+                        return Buffer.from(v.data);
+                    }
+                    if (v.type === 'Date') {
+                        return new Date(v.data);
+                    }
                 }
             }
             return reviver ? reviver(k, v) : v;
