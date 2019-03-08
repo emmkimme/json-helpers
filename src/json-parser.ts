@@ -1,48 +1,27 @@
 
-import { Buffer } from 'buffer';
+import { ToJSONReplacer, ToJSONReviver } from './tojson';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
 export namespace JSONParser {
-    const JSON_TOKEN_UNDEFINED = '_/undefined/_';
 
     export function stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
-        let previousDateToJSON = Date.prototype.toJSON;
-        Date.prototype.toJSON = function(key?: string): any {
-            return {type: 'Date', data: this.valueOf()};
-        };
+        let toJSONReplacer = ToJSONReplacer.Create(replacer);
+        toJSONReplacer.activate();
+
         try {
-            let result = JSON.stringify(value, (k, v) => {
-                if (typeof v === 'undefined') {
-                    return JSON_TOKEN_UNDEFINED;
-                }
-                return replacer ? replacer(k, v) : v;
-            });
-            Date.prototype.toJSON = previousDateToJSON;
+            let result = JSON.stringify(value, toJSONReplacer.replacer);
+            toJSONReplacer.restore();
             return result;
         }
         catch (err) {
-            Date.prototype.toJSON = previousDateToJSON;
+            toJSONReplacer.restore();
             throw err;
         }
     }
 
    export function parse(text: string, reviver?: (key: any, value: any) => any): any {
-        return JSON.parse(text, (k, v) => {
-            if (v) {
-                if (v === JSON_TOKEN_UNDEFINED) {
-                    return undefined;
-                }
-                if (v.data && v.type) {
-                    if (v.type === 'Buffer') {
-                        return Buffer.from(v.data);
-                    }
-                    if (v.type === 'Date') {
-                        return new Date(v.data);
-                    }
-                }
-            }
-            return reviver ? reviver(k, v) : v;
-        });
+        let toJSONReviver = ToJSONReviver.Create(reviver);
+        return JSON.parse(text, toJSONReviver.reviver);
     }
 
 }

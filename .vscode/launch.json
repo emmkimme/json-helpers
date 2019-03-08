@@ -11,8 +11,7 @@
                 "sourceMaps": true,
            
                 "args": [
-                    // "test/**/serializeObjectTest.js",
-                    "test/**/bijectiveJSONTest.js",
+                    "test/**/json-parser.test.js",
                     // "-g=Object", 
                     // "-g=Buffer", 
                     "--no-timeouts", 

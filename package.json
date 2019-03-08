@@ -16,7 +16,6 @@
     "parser",
     "node",
     "stringify",
-    "parse",
     "buffer",
     "date",
     "undefined"
@@ -46,7 +45,7 @@
     "sinon": "^4.0.1",
     "tslint": "^4.1.1",
     "tslint-microsoft-contrib": "^4.0.1",
-    "typescript": "^3.1.1"
+    "typescript": "^3.3.0"
   },
   "scripts": {
     "clean": "del-cli ./lib ./build ./dist",

@@ -103,7 +103,9 @@ describe('JSON-Parser', () => {
           testUndefined: undefined
         },
         testArrayUndefined: [12, "str", undefined, 3, null, "end"],
-        testBuffer: Buffer.from('ceci est un test')
+        testBuffer: Buffer.from('ceci est un test'),
+        testError: new Error('Test Error'),
+        testTypeError: new TypeError('Test TypeError'),
       },
       request: {
         replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
@@ -151,26 +153,68 @@ describe('JSON-Parser', () => {
     });
   });
 
-  describe('date json', () => {
+  describe('Date json', () => {
     let myDate = new Date();
 
     it('JSON-Parser.stringify - date json', () => {
       let result;
-      console.time('JSON-Parser.stringify - date json');
+      console.time('JSON-Parser.stringify - Date json');
       for (i = 0; i < 10000; ++i) {
         result = json_tools.JSONParser.stringify(myDate);
       }
-      console.timeEnd('JSON-Parser.stringify - date json');
+      console.timeEnd('JSON-Parser.stringify - Date json');
 
       let resultParse;
-      console.time('JSON-Parser.parse - date json');
+      console.time('JSON-Parser.parse - Date json');
       for (i = 0; i < 10000; ++i) {
         resultParse = json_tools.JSONParser.parse(result);
       }
-      console.timeEnd('JSON-Parser.parse - date json');
+      console.timeEnd('JSON-Parser.parse - Date json');
 
       assert(myDate.valueOf() == resultParse.valueOf());
     });
   });
 
-});
+  describe('Error json', () => {
+    let myError = new Error();
+
+    it('JSON-Parser.stringify - Error json', () => {
+      let result;
+      console.time('JSON-Parser.stringify - Error json');
+      for (i = 0; i < 10000; ++i) {
+        result = json_tools.JSONParser.stringify(myError);
+      }
+      console.timeEnd('JSON-Parser.stringify - Error json');
+
+      let resultParse;
+      console.time('JSON-Parser.parse - Error json');
+      for (i = 0; i < 10000; ++i) {
+        resultParse = json_tools.JSONParser.parse(result);
+      }
+      console.timeEnd('JSON-Parser.parse - Error json');
+
+      assert(myError.message == resultParse.message);
+    });
+  });
+
+  describe('TypeError json', () => {
+    let myTypeError = new TypeError();
+
+    it('JSON-Parser.stringify - TypeError json', () => {
+      let result;
+      console.time('JSON-Parser.stringify - TypeError json');
+      for (i = 0; i < 10000; ++i) {
+        result = json_tools.JSONParser.stringify(myTypeError);
+      }
+      console.timeEnd('JSON-Parser.stringify - TypeError json');
+
+      let resultParse;
+      console.time('JSON-Parser.parse - TypeError json');
+      for (i = 0; i < 10000; ++i) {
+        resultParse = json_tools.JSONParser.parse(result);
+      }
+      console.timeEnd('JSON-Parser.parse - TypeError json');
+
+      assert(myTypeError.message == resultParse.message);
+    });
+  });});
