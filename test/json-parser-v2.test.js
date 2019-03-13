@@ -10,7 +10,7 @@ function ObjectEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);
 }
 
-describe('JSONParser', () => {
+describe('JSONParserV2', () => {
 
   // describe('big json', () => {
   //   it('JSON.stringify', () => {
@@ -24,14 +24,14 @@ describe('JSONParser', () => {
   //     assert(ObjectEqual(bigData, newbigdata));
   //   });
 
-  //   it('JSONParser.stringify', () => {
-  //     console.time('JSONParser.stringify - big json');
-  //     let result = json_tools.JSONParser.stringify(bigData);
-  //     console.timeEnd('JSONParser.stringify - big json');
+  //   it('JSONParserV2.stringify', () => {
+  //     console.time('JSONParserV2.stringify - big json');
+  //     let result = json_tools.JSONParserV2.stringify(bigData);
+  //     console.timeEnd('JSONParserV2.stringify - big json');
 
-  //     console.time('JSONParser.parse - big json');
-  //     let newbigdata = json_tools.JSONParser.parse(result);
-  //     console.timeEnd('JSONParser.parse - big json');
+  //     console.time('JSONParserV2.parse - big json');
+  //     let newbigdata = json_tools.JSONParserV2.parse(result);
+  //     console.timeEnd('JSONParserV2.parse - big json');
   //     assert(ObjectEqual(bigData, newbigdata));
   //   });
   // });
@@ -72,20 +72,20 @@ describe('JSONParser', () => {
   //     console.timeEnd('JSON.parse - small json');
   //   });
 
-  //   it('JSONParser.stringify - small json', () => {
+  //   it('JSONParserV2.stringify - small json', () => {
   //     let result;
-  //     console.time('JSONParser.stringify - small json');
+  //     console.time('JSONParserV2.stringify - small json');
   //     for (i = 0; i < 10000; ++i) {
-  //       result = json_tools.JSONParser.stringify(busEvent);
+  //       result = json_tools.JSONParserV2.stringify(busEvent);
   //     }
-  //     console.timeEnd('JSONParser.stringify - small json');
+  //     console.timeEnd('JSONParserV2.stringify - small json');
 
   //     let resultParse;
-  //     console.time('JSONParser.parse - small json');
+  //     console.time('JSONParserV2.parse - small json');
   //     for (i = 0; i < 10000; ++i) {
-  //       resultParse = json_tools.JSONParser.parse(result);
+  //       resultParse = json_tools.JSONParserV2.parse(result);
   //     }
-  //     console.timeEnd('JSONParser.parse - small json');
+  //     console.timeEnd('JSONParserV2.parse - small json');
   //   });
   // });
 
@@ -113,31 +113,31 @@ describe('JSONParser', () => {
   //     }
   //   };
 
-  //   it('JSONParser.stringify - complex json', () => {
+  //   it('JSONParserV2.stringify - complex json', () => {
   //     let result;
-  //     console.time('JSONParser.stringify - complex json');
+  //     console.time('JSONParserV2.stringify - complex json');
   //     for (i = 0; i < 10000; ++i) {
-  //       result = json_tools.JSONParser.stringify(busEvent);
+  //       result = json_tools.JSONParserV2.stringify(busEvent);
   //     }
-  //     console.timeEnd('JSONParser.stringify - complex json');
+  //     console.timeEnd('JSONParserV2.stringify - complex json');
 
   //     let resultParse;
-  //     console.time('JSONParser.parse - complex json');
+  //     console.time('JSONParserV2.parse - complex json');
   //     for (i = 0; i < 10000; ++i) {
-  //       resultParse = json_tools.JSONParser.parse(result);
+  //       resultParse = json_tools.JSONParserV2.parse(result);
   //     }
-  //     console.timeEnd('JSONParser.parse - complex json');
+  //     console.timeEnd('JSONParserV2.parse - complex json');
   //   });
   // });
 
   function TestTypeOf(myValue, nameTypeOf, compare) {
-    it(`JSONParser.stringify - ${nameTypeOf}`, () => {
+    it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
       let result;
-      console.time(`JSONParser.stringify - ${nameTypeOf}`);
+      console.time(`JSONParserV2.stringify - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParser.stringify(myValue);
+        result = json_tools.JSONParserV2.stringify(myValue);
       }
-      console.timeEnd(`JSONParser.stringify - ${nameTypeOf}`);
+      console.timeEnd(`JSONParserV2.stringify - ${nameTypeOf}`);
 
       console.time(`JSON.stringify - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
@@ -147,11 +147,11 @@ describe('JSONParser', () => {
       console.timeEnd(`JSON.stringify - ${nameTypeOf}`);
 
       let resultParse;
-      console.time(`JSONParser.parse - ${nameTypeOf}`);
+      console.time(`JSONParserV2.parse - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParser.parse(result);
+        resultParse = json_tools.JSONParserV2.parse(result);
       }
-      console.timeEnd(`JSONParser.parse - ${nameTypeOf}`);
+      console.timeEnd(`JSONParserV2.parse - ${nameTypeOf}`);
 
       console.time(`JSON.parse - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {

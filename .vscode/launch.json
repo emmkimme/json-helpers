@@ -11,9 +11,10 @@
                 "sourceMaps": true,
            
                 "args": [
-                    "test/**/json-parser.test.js",
+                    "test/**/*.test.js",
                     // "-g=Object", 
                     // "-g=Buffer", 
+                    // "-g","Error json", 
                     "--no-timeouts", 
                     "--recursive"
                 ],
