@@ -30,14 +30,16 @@ class ToJSONReplacerDirect implements ToJSONReplacer {
             Object.defineProperty(Error.prototype, 'toJSON', { 
                 value: function(key?: string): any {
                     return { type: 'Error', data: this.message };
-                }
+                },
+                configurable: true
             });
 
             TypeError.name
             Object.defineProperty(TypeError.prototype, 'toJSON', { 
                 value: function(key?: string): any {
                     return { type: 'TypeError', data: this.message };
-                }
+                },
+                configurable: true
             });
         }
         catch(err) {

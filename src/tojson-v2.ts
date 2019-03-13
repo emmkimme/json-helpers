@@ -106,13 +106,6 @@ const bufferJSONSupport = new JSONFormatClass(
 bufferJSONSupport;
 
 
-// let toJSONClassHelpers: Map<string, Function>;
-// let fromJSONClassHelpers: Map<string, Function>;
-// function RegisterHelper<T extends Object>(objectConstructor: T, toJSON: () => JSONFormat, fromJSON: (data: string) => T) {
-//     toJSONClassHelpers.set(objectConstructor.constructor.name, toJSON);
-//     fromJSONClassHelpers.set(objectConstructor.constructor.name, fromJSON);
-// }
-
 // Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
 class ToJSONReplacerDirect implements ToJSONReplacer {
     // private static previousErrorToJSON = Error.prototype.toJSON;
@@ -125,29 +118,6 @@ class ToJSONReplacerDirect implements ToJSONReplacer {
         JSONFormatClass.maps.forEach(item => {
             item.install();
         });
-        // Date.prototype.toJSON = function(): any {
-        //     return { type: 'Date', data: this.valueOf() };
-        // };
-
-        // We lost name and stack !
-        // try {
-        //     Object.defineProperty(Error.prototype, 'toJSON', { 
-        //         value: function(): any {
-        //             return { type: 'Error', data: this.message };
-        //         },
-        //         configurable: true
-        //     });
-
-        //     TypeError.name
-        //     Object.defineProperty(TypeError.prototype, 'toJSON', { 
-        //         value: function(): any {
-        //             return { type: 'TypeError', data: this.message };
-        //         },
-        //         configurable: true
-        //     });
-        // }
-        // catch(err) {
-        // }
     }
 
     replacer(key: string, value: any): any {
@@ -161,9 +131,6 @@ class ToJSONReplacerDirect implements ToJSONReplacer {
         JSONFormatClass.maps.forEach(item => {
             item.uninstall();
         });
-        // Date.prototype.toJSON = ToJSONReplacerDirect.previousDateToJSON;
-        // Error.prototype['toJSON'] = ToJSONReplacer.previousErrorToJSON;
-        // TypeError.prototype['toJSON'] = ToJSONReplacer.previousTypeErrorToJSON;
     }
 }
 
@@ -229,18 +196,11 @@ class ToJSONReviverOverride extends ToJSONReviverDirect {
             if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
-            if (value.data && value.type) {
-                if (value.type === 'Buffer') {
-                    return Buffer.from(value.data);
-                }
-                if (value.type === 'Date') {
-                    return new Date(value.data);
-                }
-                if (value.type === 'Error') {
-                    return new Error(value.data);
-                }
-                if (value.type === 'TypeError') {
-                    return new TypeError(value.data);
+            // Is it JSONFormat ?
+            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+                const format = JSONFormatClass.maps.get(value.type);
+                if (format) {
+                    return format.create(value.data);
                 }
             }
         }
