@@ -53,7 +53,23 @@ describe('JSONParser', () => {
   }
 
   describe('buffer json', () => {
-    let myBuffer = Buffer.from('ceci est un test');
+
+    function allocateString(num) {
+      num = Number(num) / 100;
+      var str ='0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
+      var result = '';
+      while (true) {
+          if (num & 1) { // (1)
+              result += str;
+          }
+          num >>>= 1; // (2)
+          if (num <= 0) break;
+          str += str;
+      }
+      return result;
+  }
+
+    let myBuffer = Buffer.from(allocateString(1024));
     TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0 );
   });
 

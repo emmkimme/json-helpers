@@ -67,9 +67,9 @@ class JSONFormatClass {
 
 const dateJSONSupport = new JSONFormatClass(
     'Date', (
-        Date as unknown) as ObjectConstructor, 
-        (t: Date) => t.valueOf(), 
-        (data: string) => new Date(data)
+    Date as unknown) as ObjectConstructor, 
+    (t: Date) => t.valueOf(), 
+    (data: string) => new Date(data)
 );
 dateJSONSupport;
 
@@ -94,9 +94,11 @@ typeErrorJSONSupport;
 
 const bufferJSONSupport = new JSONFormatClass(
     'Buffer', 
-    (Buffer as unknown) as ObjectConstructor, 
-    (t: Buffer) => t.toString('utf8'), 
-    (data: string) => Buffer.from(data, 'utf8')
+    (Buffer as unknown) as ObjectConstructor,
+    // null, 
+    // (data: string) => Buffer.from(data) 
+    (t: Buffer) => t.toString('binary'), 
+    (data: string) => Buffer.from(data, 'binary')
 );
 bufferJSONSupport;
 
