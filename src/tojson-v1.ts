@@ -3,23 +3,21 @@ import { Buffer } from 'buffer';
 import { ToJSONReplacer, ToJSONReviver, ToJSONConstants } from './tojson';
 
 ToJSONReplacer.Create = ToJSONReplacer.CreateV1 = (replacer?: (key: string, value: any) => any): ToJSONReplacer => {
-    if (replacer) {
-        return new ToJSONReplacerOverride(replacer);
-    }
-    else {
-        return new ToJSONReplacerDirect();
-    }
+    return new ToJSONReplacerImpl(replacer);
 }
 
 // Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
-class ToJSONReplacerDirect implements ToJSONReplacer {
+class ToJSONReplacerImpl implements ToJSONReplacer {
     private static previousDateToJSON = Date.prototype.toJSON;
     // private static previousErrorToJSON = Error.prototype.toJSON;
     // private static previousTypeErrorToJSON = TypeError.prototype.toJSON;
 
-    constructor() {
+    private _replacer: Function;
+
+    constructor(replacer: (key: string, value: any) => any) {
+        this._replacer = replacer;
     }
-   
+
     install(): void {
         Date.prototype.toJSON = function(key?: string): any {
             return { type: 'Date', data: this.valueOf() };
@@ -53,41 +51,42 @@ class ToJSONReplacerDirect implements ToJSONReplacer {
         return value;
     }
 
-    uninstall(): void {
-        Date.prototype.toJSON = ToJSONReplacerDirect.previousDateToJSON;
-        // Error.prototype['toJSON'] = ToJSONReplacer.previousErrorToJSON;
-        // TypeError.prototype['toJSON'] = ToJSONReplacer.previousTypeErrorToJSON;
-    }
-}
-
-class ToJSONReplacerOverride extends ToJSONReplacerDirect {
-    private _replacer: Function;
-
-    constructor(replacer: (key: string, value: any) => any) {
-        super();
-
-        this._replacer = replacer;
-    }
-
-    replacer(key: string, value: any) {
+    replacerChain(key: string, value: any) {
         if (typeof key === 'undefined') {
             return ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return this._replacer(key, value);
     }
+
+    uninstall(): void {
+        Date.prototype.toJSON = ToJSONReplacerImpl.previousDateToJSON;
+        // Error.prototype['toJSON'] = ToJSONReplacer.previousErrorToJSON;
+        // TypeError.prototype['toJSON'] = ToJSONReplacer.previousTypeErrorToJSON;
+    }
+
+    stringify(value: any, space?: string | number): string {
+        this.install();
+        try {
+            let result = JSON.stringify(value, this._replacer ? this.replacerChain : this.replacer);
+            this.uninstall();
+            return result;
+        }
+        catch (err) {
+            this.uninstall();
+            throw err;
+        }
+    }
 }
 
 ToJSONReviver.Create = ToJSONReviver.CreateV1 = (reviver?: (key: string, value: any) => any): ToJSONReviver => {
-    if (reviver) {
-        return new ToJSONReviverOverride(reviver);
-    }
-    else {
-        return new ToJSONReviverDirect();
-    }
+    return new ToJSONReviverImpl(reviver);
 }
 
-class ToJSONReviverDirect implements ToJSONReviver {
-    constructor() {
+class ToJSONReviverImpl implements ToJSONReviver {
+    private _reviver: Function;
+
+    constructor(reviver: (key: string, value: any) => any) {
+        this._reviver = reviver;
     }
    
     reviver(key: string, value: any) {
@@ -112,18 +111,8 @@ class ToJSONReviverDirect implements ToJSONReviver {
         }
         return value;
     }
-}
 
-class ToJSONReviverOverride extends ToJSONReviverDirect {
-    private _reviver: Function;
-
-    constructor(reviver: (key: string, value: any) => any) {
-        super();
-
-        this._reviver = reviver;
-    }
-   
-    reviver(key: string, value: any): any {
+    reviverChain(key: string, value: any): any {
         if (value) {
             if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
@@ -143,6 +132,10 @@ class ToJSONReviverOverride extends ToJSONReviverDirect {
                 }
             }
         }
-        return this._reviver ? this._reviver(key, value) : value;
+        return this._reviver(key, value);
+    }
+
+    parse(text: string): any {
+        return JSON.parse(text, this._reviver ? this.reviverChain : this.reviver);
     }
 }

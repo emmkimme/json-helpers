@@ -3,12 +3,7 @@ import { Buffer } from 'buffer';
 import { ToJSONReplacer, ToJSONReviver, ToJSONConstants } from './tojson';
 
 ToJSONReplacer.CreateV2 = (replacer?: (key: string, value: any) => any): ToJSONReplacer => {
-    if (replacer) {
-        return new ToJSONReplacerOverride(replacer);
-    }
-    else {
-        return new ToJSONReplacerDirect();
-    }
+    return new ToJSONReplacerImpl(replacer);
 }
 
 export interface JSONFormat {
@@ -96,27 +91,33 @@ const typeErrorJSONSupport = new JSONFormatClass(
 );
 typeErrorJSONSupport;
 
-// toJSON is implemented by Buffer !
+
 const bufferJSONSupport = new JSONFormatClass(
     'Buffer', 
-    (TypeError as unknown) as ObjectConstructor, 
-    null, 
-    (data: string) => Buffer.from(data)
+    (Buffer as unknown) as ObjectConstructor, 
+    (t: Buffer) => t.toString('utf8'), 
+    (data: string) => Buffer.from(data, 'utf8')
 );
 bufferJSONSupport;
 
 
 // Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
-class ToJSONReplacerDirect implements ToJSONReplacer {
-    // private static previousErrorToJSON = Error.prototype.toJSON;
-    // private static previousTypeErrorToJSON = TypeError.prototype.toJSON;
+class ToJSONReplacerImpl implements ToJSONReplacer {
+    private _replacer: Function;
 
-    constructor() {
+    constructor(replacer: (key: string, value: any) => any) {
+        this._replacer = replacer;
     }
-   
+    
     install(): void {
         JSONFormatClass.maps.forEach(item => {
             item.install();
+        });
+    }
+
+    uninstall(): void {
+        JSONFormatClass.maps.forEach(item => {
+            item.uninstall();
         });
     }
 
@@ -127,41 +128,36 @@ class ToJSONReplacerDirect implements ToJSONReplacer {
         return value;
     }
 
-    uninstall(): void {
-        JSONFormatClass.maps.forEach(item => {
-            item.uninstall();
-        });
-    }
-}
-
-class ToJSONReplacerOverride extends ToJSONReplacerDirect {
-    private _replacer: Function;
-
-    constructor(replacer: (key: string, value: any) => any) {
-        super();
-
-        this._replacer = replacer;
-    }
-
-    replacer(key: string, value: any) {
+    replacerChain(key: string, value: any) {
         if (typeof key === 'undefined') {
             return ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return this._replacer(key, value);
     }
+
+    stringify(value: any, space?: string | number): string {
+        this.install();
+        try {
+            let result = JSON.stringify(value, this._replacer ? this.replacerChain : this.replacer, space);
+            this.uninstall();
+            return result;
+        }
+        catch (err) {
+            this.uninstall();
+            throw err;
+        }
+    }
 }
 
 ToJSONReviver.CreateV2 = (reviver?: (key: string, value: any) => any): ToJSONReviver => {
-    if (reviver) {
-        return new ToJSONReviverOverride(reviver);
-    }
-    else {
-        return new ToJSONReviverDirect();
-    }
+    return new ToJSONReviverImpl(reviver);
 }
 
-class ToJSONReviverDirect implements ToJSONReviver {
-    constructor() {
+class ToJSONReviverImpl implements ToJSONReviver {
+    private _reviver: Function;
+
+    constructor(reviver: (key: string, value: any) => any) {
+        this._reviver = reviver;
     }
    
     reviver(key: string, value: any) {
@@ -180,18 +176,8 @@ class ToJSONReviverDirect implements ToJSONReviver {
         }
         return value;
     }
-}
-
-class ToJSONReviverOverride extends ToJSONReviverDirect {
-    private _reviver: Function;
-
-    constructor(reviver: (key: string, value: any) => any) {
-        super();
-
-        this._reviver = reviver;
-    }
-   
-    reviver(key: string, value: any): any {
+    
+    reviverChain(key: string, value: any): any {
         if (value) {
             if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
@@ -204,6 +190,10 @@ class ToJSONReviverOverride extends ToJSONReviverDirect {
                 }
             }
         }
-        return this._reviver ? this._reviver(key, value) : value;
+        return this._reviver(key, value);
+    }
+
+    parse(text: string): any {
+        return JSON.parse(text, this._reviver ? this.reviverChain : this.reviver);
     }
 }

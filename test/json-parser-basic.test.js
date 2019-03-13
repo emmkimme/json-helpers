@@ -34,12 +34,14 @@ describe('JSONParser', () => {
         resultParse = json_tools.JSONParser.parse(result);
       }
       console.timeEnd(`JSONParser.parse - ${nameTypeOf}`);
+      assert(compare(myValue, resultParse));
 
       console.time(`JSONParserV2.parse - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
         resultParse = json_tools.JSONParserV2.parse(result);
       }
       console.timeEnd(`JSONParserV2.parse - ${nameTypeOf}`);
+      assert(compare(myValue, resultParse));
 
       console.time(`JSON.parse - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
@@ -47,8 +49,6 @@ describe('JSONParser', () => {
         localParse;
       }
       console.timeEnd(`JSON.parse - ${nameTypeOf}`);
-
-      assert(compare(myValue, resultParse));
     });
   }
 

@@ -9,9 +9,7 @@ export namespace ToJSONReplacer {
 }
 
 export interface ToJSONReplacer {
-    install(): void;
-    uninstall(): void;
-    replacer(key: string, value: any): any;
+    stringify(value: any, space?: string | number): string
 }
 
 export namespace ToJSONReviver {
@@ -21,5 +19,5 @@ export namespace ToJSONReviver {
 }
 
 export interface ToJSONReviver {
-    reviver(key: string, value: any): any;
+    parse(text: string): any;
 }
