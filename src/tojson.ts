@@ -3,21 +3,21 @@ export namespace ToJSONConstants {
 }
 
 export namespace ToJSONReplacer {
-    export let Create: (replacer?: (key: string, value: any) => any) => ToJSONReplacer;
-    export let CreateV1: (replacer?: (key: string, value: any) => any) => ToJSONReplacer;
-    export let CreateV2: (replacer?: (key: string, value: any) => any) => ToJSONReplacer;
+    export let Get: () => ToJSONReplacer;
+    export let GetV1: () => ToJSONReplacer;
+    export let GetV2: () => ToJSONReplacer;
 }
 
 export interface ToJSONReplacer {
-    stringify(value: any, space?: string | number): string
+    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string
 }
 
 export namespace ToJSONReviver {
-    export let Create: (reviver?: (key: string, value: any) => any) => ToJSONReviver;
-    export let CreateV1: (reviver?: (key: string, value: any) => any) => ToJSONReviver;
-    export let CreateV2: (reviver?: (key: string, value: any) => any) => ToJSONReviver;
+    export let Get: () => ToJSONReviver;
+    export let GetV1: () => ToJSONReviver;
+    export let GetV2: () => ToJSONReviver;
 }
 
 export interface ToJSONReviver {
-    parse(text: string): any;
+    parse(text: string, reviver?: (key: string, value: any) => any): any;
 }

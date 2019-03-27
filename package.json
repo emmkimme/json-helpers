@@ -56,7 +56,7 @@
     "build-declaration-dts-bundle": "dts-bundle --outputAsModuleFolder --name json-helpers --main ./lib/json-helpers.d.ts",
     "build-declaration-dts-bundle-browser": "dts-bundle --outputAsModuleFolder --name json-helpers-browser --main ./lib/json-helpers-browser.d.ts",
     "clean-declaration-dts": "del-cli ./lib/code/*.d.ts",
-    "test": "mocha test --recursive",
+    "test": "mocha test --recursive --no-timeouts",
     "tsc": "tsc",
     "tslint": "tslint",
     "publication": "npm publish ./ --registry https://registry.npmjs.org/"

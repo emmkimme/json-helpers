@@ -35,9 +35,15 @@ let busEvent = {
       }
     };
 
-    let resultStringify = json_tools.JSONParser.stringify(busEvent);
-    let mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
+let resultStringify = json_tools.JSONParser.stringify(busEvent);
+let mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
+
+// json_tools.JSONParserV2 is far more efficient for buffer serialization (x10) but it overrides the default Buffer.toJSON function
+// So may break some compatibility
+
 ```
+
+
 
 # MIT License
 
