@@ -22,29 +22,37 @@ export class JSONFormatter {
     install() {
         if (this.serialize) {
             let self = this;
-            Object.defineProperty(this.objectConstructor.prototype, 'toJSON', { 
-                value: function(): any {
-                    return { type: self.objectName, data: self.serialize(this) };
-                },
-                configurable: true
-            });
+            try {
+                Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
+                    value: function (): any {
+                        return { type: self.objectName, data: self.serialize(this) };
+                    },
+                    configurable: true
+                });
+            }
+            catch (err) {
+            }
         }
     }
 
     uninstall() {
         if (this.serialize) {
-            if (this.previousToJSON) {
-                let self = this;
-                Object.defineProperty(this.objectConstructor.prototype, 'toJSON', self.previousToJSON);
+            try {
+                if (this.previousToJSON) {
+                    let self = this;
+                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', self.previousToJSON);
+                }
+                else {
+                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
+                        value: function (): any {
+                            return this.toString();
+                        },
+                        configurable: true,
+                        enumerable: false
+                    });
+                }
             }
-            else {
-                Object.defineProperty(this.objectConstructor.prototype, 'toJSON', { 
-                    value: function(): any {
-                        return this.toString();
-                    },
-                    configurable: true,
-                    enumerable: false
-                });
+            catch (err) {
             }
         }
     }
