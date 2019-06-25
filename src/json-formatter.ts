@@ -21,7 +21,7 @@ export class JSONFormatter {
 
     install() {
         if (this.serialize) {
-            let self = this;
+            const self = this;
             try {
                 Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
                     value: function (): any {
@@ -39,7 +39,7 @@ export class JSONFormatter {
         if (this.serialize) {
             try {
                 if (this.previousToJSON) {
-                    let self = this;
+                    const self = this;
                     Object.defineProperty(this.objectConstructor.prototype, 'toJSON', self.previousToJSON);
                 }
                 else {

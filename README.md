@@ -14,7 +14,7 @@ Dependencies
 ```js
 const json_tools = require('json-helpers');
 
-let busEvent = {
+const busEvent = {
       channel: '/electron-common-ipc/myChannel/myRequest',
       sender: {
         id: 'MyPeer_1234567890',
@@ -35,8 +35,8 @@ let busEvent = {
       }
     };
 
-let resultStringify = json_tools.JSONParser.stringify(busEvent);
-let mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
+const resultStringify = json_tools.JSONParser.stringify(busEvent);
+const mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
 
 // json_tools.JSONParserV2 is far more efficient for buffer serialization (x10) but it overrides the default Buffer.toJSON function
 // So may break some compatibility

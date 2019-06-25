@@ -39,8 +39,8 @@ export class ToJSONReplacerImpl implements ToJSONReplacer {
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         this.install();
         try {
-            let replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer.bind(this);
-            let result = JSON.stringify(value, replacerCb, space);
+            const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer.bind(this);
+            const result = JSON.stringify(value, replacerCb, space);
             this.uninstall();
             return result;
         }
@@ -93,7 +93,7 @@ export class ToJSONReviverImpl implements ToJSONReviver {
     }
 
     parse(text: string, reviver?: (key: string, value: any) => any): any {
-        let reviverCb = reviver ? this.reviverChain.bind(this, reviver) : this.reviver.bind(this);
+        const reviverCb = reviver ? this.reviverChain.bind(this, reviver) : this.reviver.bind(this);
         return JSON.parse(text, reviverCb);
     }
 }

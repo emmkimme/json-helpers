@@ -4,7 +4,7 @@ import { ToJSONReplacerImpl, ToJSONReviverImpl } from './tojson-impl';
 import { JSONFormatter, JSONFormattersMap } from './json-formatter';
 import { dateJSONSupport, errorJSONSupport, typeErrorJSONSupport, bufferJSONSupportBinary } from './json-formatter-default';
 
-let jsonFormattersMap: JSONFormattersMap = new Map<string, JSONFormatter>();
+const jsonFormattersMap: JSONFormattersMap = new Map<string, JSONFormatter>();
 jsonFormattersMap.set(dateJSONSupport.objectName, dateJSONSupport);
 jsonFormattersMap.set(errorJSONSupport.objectName, errorJSONSupport);
 jsonFormattersMap.set(typeErrorJSONSupport.objectName, typeErrorJSONSupport);
