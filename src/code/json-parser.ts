@@ -16,7 +16,6 @@ export namespace JSONParser {
 
 }
 
-
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
 export namespace JSONParserV2 {
 
