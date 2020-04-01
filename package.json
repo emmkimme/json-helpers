@@ -1,6 +1,6 @@
 {
   "name": "json-helpers",
-  "version": "2.2.0",
+  "version": "2.1.1",
   "description": "JSON stringify/parser managing 'undefined, Date and Buffer.",
   "repository": {
     "type": "git",
@@ -36,16 +36,16 @@
   "browser": "./lib/json-helpers-browser.js",
   "types": "./lib/json-helpers.d.ts",
   "devDependencies": {
-    "@types/node": "12.11.2",
+    "@types/node": "13.9.8",
     "chai": "^4.2.0",
     "del": "^5.1.0",
     "del-cli": "^3.0.0",
     "dts-bundle": "^0.7.3",
-    "mocha": "^6.2.2",
-    "sinon": "^7.5.0",
-    "tslint": "^5.20.0",
+    "mocha": "^7.1.1",
+    "sinon": "^9.0.1",
+    "tslint": "^6.1.0",
     "tslint-microsoft-contrib": "^6.2.0",
-    "typescript": "^3.6.4"
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "clean": "del-cli ./lib ./build ./dist",
@@ -59,6 +59,6 @@
     "test": "mocha test --recursive --no-timeouts",
     "tsc": "tsc",
     "tslint": "tslint",
-    "publication": "npm publish ./ --registry https://registry.npmjs.org/"
+    "publish": "npm publish ./ --registry https://registry.npmjs.org/"
   }
 }

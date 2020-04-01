@@ -48,7 +48,8 @@ export class JSONFormatter {
                             return this.toString();
                         },
                         configurable: true,
-                        enumerable: false
+                        enumerable: false,
+                        writable: true
                     });
                 }
             }
