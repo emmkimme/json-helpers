@@ -1,6 +1,6 @@
 {
   "name": "json-helpers",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "JSON stringify/parser managing 'undefined, Date and Buffer.",
   "repository": {
     "type": "git",
@@ -59,6 +59,6 @@
     "test": "mocha test --recursive --no-timeouts",
     "tsc": "tsc",
     "tslint": "tslint",
-    "publish": "npm publish ./ --registry https://registry.npmjs.org/"
+    "publication": "npm publish ./ --registry https://registry.npmjs.org/"
   }
 }
