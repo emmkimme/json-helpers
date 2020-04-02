@@ -21,13 +21,15 @@ export class JSONFormatter {
 
     install() {
         if (this.serialize) {
-            const self = this;
             try {
+                const self = this;
                 Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
                     value: function (): any {
                         return { type: self.objectName, data: self.serialize(this) };
                     },
-                    configurable: true
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
                 });
             }
             catch (err) {
