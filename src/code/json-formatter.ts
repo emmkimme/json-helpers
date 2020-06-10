@@ -59,4 +59,23 @@ export class JSONFormatter {
             }
         }
     }
+
+    // /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
+    // For test purpose, not called
+    // /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
+    delete() {
+        if (this.serialize) {
+            try {
+                if (this.previousToJSON) {
+                    const self = this;
+                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', self.previousToJSON);
+                }
+                else {
+                    delete (this.objectConstructor.prototype as any)['toJSON' ];
+                }
+            }
+            catch (err) {
+            }
+        }
+    }
 }
