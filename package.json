@@ -59,7 +59,7 @@
     "test": "mocha test --recursive --no-timeouts",
     "tsc": "tsc",
     "tslint": "tslint",
-    "publication": "npm publish ./ --registry https://registry.npmjs.org/"
+    "deploy": "npm publish ./ --registry https://registry.npmjs.org/"
   },
   "dependencies": {}
 }
