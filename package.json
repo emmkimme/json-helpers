@@ -60,5 +60,6 @@
     "tsc": "tsc",
     "tslint": "tslint",
     "publication": "npm publish ./ --registry https://registry.npmjs.org/"
-  }
+  },
+  "dependencies": {}
 }
