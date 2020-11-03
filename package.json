@@ -1,6 +1,6 @@
 {
   "name": "json-helpers",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "JSON stringify/parser managing 'undefined, Date and Buffer.",
   "repository": {
     "type": "git",
@@ -36,16 +36,16 @@
   "browser": "./lib/json-helpers-browser.js",
   "types": "./lib/json-helpers.d.ts",
   "devDependencies": {
-    "@types/node": "13.9.8",
+    "@types/node": "14.14.6",
     "chai": "^4.2.0",
-    "del": "^5.1.0",
-    "del-cli": "^3.0.0",
+    "del": "^6.0.0",
+    "del-cli": "^3.0.1",
     "dts-bundle": "^0.7.3",
-    "mocha": "^7.1.1",
-    "sinon": "^9.0.1",
+    "mocha": "^8.2.1",
+    "sinon": "^9.2.1",
     "tslint": "^6.1.0",
     "tslint-microsoft-contrib": "^6.2.0",
-    "typescript": "^3.8.3"
+    "typescript": "^4.0.5"
   },
   "scripts": {
     "clean": "del-cli ./lib ./build ./dist",
