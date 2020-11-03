@@ -11,15 +11,15 @@ export class ToJSONReplacerImpl implements ToJSONReplacer {
     }
     
     install(): void {
-        this._jsonFormattersMap.forEach(item => {
+        for (let [,item] of this._jsonFormattersMap) {
             item.install();
-        });
+        }
     }
 
     uninstall(): void {
-        this._jsonFormattersMap.forEach(item => {
+        for (let [,item] of this._jsonFormattersMap) {
             item.uninstall();
-        });
+        }
     }
 
     replacer(key: string, value: any): any {
