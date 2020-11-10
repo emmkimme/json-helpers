@@ -36,7 +36,7 @@
   "browser": "./lib/json-helpers-browser.js",
   "types": "./lib/json-helpers.d.ts",
   "devDependencies": {
-    "@types/node": "14.14.6",
+    "@types/node": "14.14.7",
     "chai": "^4.2.0",
     "del": "^6.0.0",
     "del-cli": "^3.0.1",
