@@ -54,10 +54,10 @@ export class ToJSONReviverImpl implements ToJSONReviver {
     }
    
     private reviver(key: string, value: any) {
-        if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-            return undefined;
-        }
-        if (typeof value === 'object') {
+        if (value) {
+            if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
+                return undefined;
+            }
             // Is it JSONFormat ?
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
                 const format = this._jsonFormattersMap.get(value.type);
@@ -70,11 +70,11 @@ export class ToJSONReviverImpl implements ToJSONReviver {
     }
     
     private reviverChain(reviver: (key: string, value: any) => any, key: string, value: any): any {
-        if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-            return undefined;
-        }
-        if (typeof value === 'object') {
-                // Is it JSONFormat ?
+        if (value) {
+            if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
+                return undefined;
+            }
+            // Is it JSONFormat ?
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
                 const format = this._jsonFormattersMap.get(value.type);
                 if (format) {

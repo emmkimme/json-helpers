@@ -11,8 +11,8 @@
                 "sourceMaps": true,
            
                 "args": [
-                    // "test/**/*.test.js",
-                    "test/**/performance.test.js",
+                    "test/**/*.test.js",
+                    // "test/**/performance.test.js",
                     // "-g=Object", 
                     // "-g=Buffer", 
                     // "-g","Error json", 
