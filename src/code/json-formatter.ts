@@ -41,8 +41,7 @@ export class JSONFormatter {
         if (this.serialize) {
             try {
                 if (this.previousToJSON) {
-                    const self = this;
-                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', self.previousToJSON);
+                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', this.previousToJSON);
                 }
                 else {
                     Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
