@@ -1,6 +1,6 @@
 import { JSONFormatter } from './json-formatter';
 
-export const dateJSONSupport = new JSONFormatter(
+export const dateJSONSupport = new JSONFormatter<Date>(
     'Date', 
     (Date as unknown) as ObjectConstructor, 
     (t: Date) => t.valueOf(), 
@@ -8,7 +8,7 @@ export const dateJSONSupport = new JSONFormatter(
 );
 
 // We lost name and stack !
-export const errorJSONSupport = new JSONFormatter(
+export const errorJSONSupport = new JSONFormatter<Error>(
     'Error', 
     (Error as unknown) as ObjectConstructor, 
     (t: Error) => t.message, 
@@ -16,21 +16,21 @@ export const errorJSONSupport = new JSONFormatter(
 );
 
 // We lost name and stack !
-export const typeErrorJSONSupport = new JSONFormatter(
+export const typeErrorJSONSupport = new JSONFormatter<TypeError>(
     'TypeError', 
     (TypeError as unknown) as ObjectConstructor, 
     (t: TypeError) => t.message, 
     (data: string) => new TypeError(data)
 );
 
-export const bufferJSONSupport = new JSONFormatter(
+export const bufferJSONSupport = new JSONFormatter<Buffer>(
     'Buffer', 
     (Buffer as unknown) as ObjectConstructor,
     null, 
     (data: string) => Buffer.from(data) 
 );
 
-export const bufferJSONSupportBinary = new JSONFormatter(
+export const bufferJSONSupportBinary = new JSONFormatter<Buffer>(
     'Buffer', 
     (Buffer as unknown) as ObjectConstructor,
     (t: Buffer) => t.toString('binary'), 

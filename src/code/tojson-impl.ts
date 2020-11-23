@@ -1,9 +1,10 @@
-import { ToJSONReplacer, ToJSONReviver, ToJSONConstants } from './tojson';
-import { JSONFormattersMap } from './json-formatter';
+import type { JSONReplacer, JSONReviver } from './tojson';
+import { ToJSONConstants } from './tojson';
+import type { JSONFormattersMap } from './json-formatter';
 
 // Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
 /** @internal */
-export class ToJSONReplacerImpl implements ToJSONReplacer {
+export class JSONReplacerImpl implements JSONReplacer {
     private _jsonFormattersMap: JSONFormattersMap;
 
     constructor(jsonFormattersMap: JSONFormattersMap) {
@@ -46,7 +47,7 @@ export class ToJSONReplacerImpl implements ToJSONReplacer {
 }
 
 /** @internal */
-export class ToJSONReviverImpl implements ToJSONReviver {
+export class JSONReviverImpl implements JSONReviver {
     private _jsonFormattersMap: JSONFormattersMap;
 
     constructor(jsonFormattersMap: JSONFormattersMap) {
@@ -62,7 +63,7 @@ export class ToJSONReviverImpl implements ToJSONReviver {
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
                 const format = this._jsonFormattersMap.get(value.type);
                 if (format) {
-                    return format.create(value.data);
+                    return format.unserialize(value.data);
                 }
             }
         }
@@ -78,7 +79,7 @@ export class ToJSONReviverImpl implements ToJSONReviver {
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
                 const format = this._jsonFormattersMap.get(value.type);
                 if (format) {
-                    return format.create(value.data);
+                    return format.unserialize(value.data);
                 }
             }
         }

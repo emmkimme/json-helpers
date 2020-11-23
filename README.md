@@ -38,7 +38,7 @@ const busEvent = {
 const resultStringify = json_tools.JSONParser.stringify(busEvent);
 const mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
 
-// json_tools.JSONParserV2 is far more efficient for buffer serialization (x10) but it overrides the default Buffer.toJSON function
+// json_tools.JSONParserV2 is far more efficient for buffer serialization (x10 faster) but it overrides the default Buffer.toJSON function
 // So may break some compatibility
 
 ```

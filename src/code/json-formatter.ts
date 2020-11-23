@@ -1,29 +1,26 @@
-export type JSONFormattersMap = Map<string, JSONFormatter>;
+export type JSONFormattersMap = Map<string, JSONFormatter<any>>;
 
-export class JSONFormatter {
+export class JSONFormatter<T> {
     objectName: string;
-    objectConstructor: ObjectConstructor;
-    previousToJSON: PropertyDescriptor;
     serialize?: Function;
     unserialize?: Function;
 
-    constructor(objectName: string, objectConstructor: ObjectConstructor, serialize?: (t: any) => any, unserialize?: (data: any) => any) {
+    protected _objectConstructor: ObjectConstructor;
+    protected _previousToJSON: PropertyDescriptor;
+
+    constructor(objectName: string, objectConstructor: ObjectConstructor, serialize?: (t: T) => any, unserialize?: (data: any) => T) {
         this.objectName = objectName;
-        this.objectConstructor = objectConstructor;
-        this.previousToJSON = Object.getOwnPropertyDescriptor(objectConstructor.prototype, 'toJSON');
+        this._objectConstructor = objectConstructor;
+        this._previousToJSON = Object.getOwnPropertyDescriptor(objectConstructor.prototype, 'toJSON');
         this.unserialize = unserialize;
         this.serialize = serialize;
-    }
-
-    create(data: any): any {
-        return this.unserialize(data);
     }
 
     install() {
         if (this.serialize) {
             try {
                 const self = this;
-                Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
+                Object.defineProperty(this._objectConstructor.prototype, 'toJSON', {
                     value: function (): any {
                         return { type: self.objectName, data: self.serialize(this) };
                     },
@@ -40,11 +37,11 @@ export class JSONFormatter {
     uninstall() {
         if (this.serialize) {
             try {
-                if (this.previousToJSON) {
-                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', this.previousToJSON);
+                if (this._previousToJSON) {
+                    Object.defineProperty(this._objectConstructor.prototype, 'toJSON', this._previousToJSON);
                 }
                 else {
-                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', {
+                    Object.defineProperty(this._objectConstructor.prototype, 'toJSON', {
                         value: function (): any {
                             return this.toString();
                         },
@@ -65,12 +62,12 @@ export class JSONFormatter {
     delete() {
         if (this.serialize) {
             try {
-                if (this.previousToJSON) {
+                if (this._previousToJSON) {
                     const self = this;
-                    Object.defineProperty(this.objectConstructor.prototype, 'toJSON', self.previousToJSON);
+                    Object.defineProperty(this._objectConstructor.prototype, 'toJSON', self._previousToJSON);
                 }
                 else {
-                    delete (this.objectConstructor.prototype as any)['toJSON' ];
+                    delete (this._objectConstructor.prototype as any)['toJSON' ];
                 }
             }
             catch (err) {

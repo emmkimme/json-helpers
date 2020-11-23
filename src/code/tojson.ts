@@ -2,22 +2,20 @@ export namespace ToJSONConstants {
     export const JSON_TOKEN_UNDEFINED = '_/undefined/_';
 }
 
-export namespace ToJSONReplacer {
-    export let Get: () => ToJSONReplacer;
-    export let GetV1: () => ToJSONReplacer;
-    export let GetV2: () => ToJSONReplacer;
+export namespace JSONReplacerFactory {
+    export let GetV1: () => JSONReplacer;
+    export let GetV2: () => JSONReplacer;
 }
 
-export interface ToJSONReplacer {
+export interface JSONReplacer {
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string
 }
 
-export namespace ToJSONReviver {
-    export let Get: () => ToJSONReviver;
-    export let GetV1: () => ToJSONReviver;
-    export let GetV2: () => ToJSONReviver;
+export namespace JSONReviverFactory {
+    export let GetV1: () => JSONReviver;
+    export let GetV2: () => JSONReviver;
 }
 
-export interface ToJSONReviver {
+export interface JSONReviver {
     parse(text: string, reviver?: (key: string, value: any) => any): any;
 }
