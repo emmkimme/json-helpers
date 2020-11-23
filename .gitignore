@@ -12,6 +12,7 @@ node_modules/
 *.vcxproj.user
 *.vcxproj.filters
 *.sln
+*.tgz
 debug.log
 npm-debug.log
 Bundled*.js
