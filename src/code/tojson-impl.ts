@@ -26,21 +26,21 @@ export class JSONReplacerImpl implements JSONReplacer {
     }
 
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
-        for (let [,item] of this._jsonFormattersMap) {
+        this._jsonFormattersMap.forEach((item) => {
             item.install();
-        }
+        });
         try {
             const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer.bind(this);
             const result = JSON.stringify(value, replacerCb, space);
-            for (let [,item] of this._jsonFormattersMap) {
+            this._jsonFormattersMap.forEach((item) => {
                 item.uninstall();
-            }
+            });
             return result;
         }
         catch (err) {
-            for (let [,item] of this._jsonFormattersMap) {
+            this._jsonFormattersMap.forEach((item) => {
                 item.uninstall();
-            }
+            });
             throw err;
         }
     }

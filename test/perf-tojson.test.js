@@ -37,6 +37,7 @@ describe(`Performance toJSON override`, () => {
     });
   }
 
+
   test(
     'Date',
     Date,
@@ -66,5 +67,3 @@ describe(`Performance toJSON override`, () => {
   );
 
 })
-
-
