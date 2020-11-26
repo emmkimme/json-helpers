@@ -1,6 +1,6 @@
 export type JSONFormattersMap = Map<string, JSONFormatter<any>>;
 
-export class JSONFormatter<T> {
+export class JSONFormatter<T extends Object> {
     objectName: string;
     serialize?: Function;
     unserialize?: Function;
@@ -8,10 +8,11 @@ export class JSONFormatter<T> {
     protected _objectConstructor: ObjectConstructor;
     protected _previousToJSON: PropertyDescriptor;
 
-    constructor(objectName: string, objectConstructor: ObjectConstructor, serialize?: (t: T) => any, unserialize?: (data: any) => T) {
-        this.objectName = objectName;
+    constructor(objectConstructor: ObjectConstructor, serialize?: (t: T) => any, unserialize?: (data: any) => T) {
         this._objectConstructor = objectConstructor;
         this._previousToJSON = Object.getOwnPropertyDescriptor(objectConstructor.prototype, 'toJSON');
+
+        this.objectName = objectConstructor.name;
         this.unserialize = unserialize;
         this.serialize = serialize;
     }

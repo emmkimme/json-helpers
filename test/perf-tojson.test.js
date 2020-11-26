@@ -10,7 +10,7 @@ const Conversions = {
 describe(`Performance toJSON override`, () => {
 
   function test(objectName, objectConstructor, serialize, unserialize) {
-    const jsonFormatter = new JSONFormatter(objectName, objectConstructor, serialize, unserialize);
+    const jsonFormatter = new JSONFormatter(objectConstructor, serialize, unserialize);
 
     it(`${objectName} set object property`, (done) => {
       const time = process.hrtime();
