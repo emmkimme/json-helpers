@@ -8,6 +8,8 @@ export namespace JSONReplacerFactory {
 }
 
 export interface JSONReplacer {
+    install(): void;
+    uninstall(): void;
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string
 }
 

@@ -6,9 +6,11 @@ import type { JSONFormattersMap } from './json-formatter';
 /** @internal */
 export class JSONReplacerImpl implements JSONReplacer {
     private _jsonFormattersMap: JSONFormattersMap;
+    private _installed: number;
 
     constructor(jsonFormattersMap: JSONFormattersMap) {
         this._jsonFormattersMap = jsonFormattersMap;
+        this._installed = 0;
     }
     
     private replacer(key: string, value: any): any {
@@ -24,23 +26,33 @@ export class JSONReplacerImpl implements JSONReplacer {
         }
         return replacer(key, value);
     }
-
-    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
-        this._jsonFormattersMap.forEach((item) => {
-            item.install();
-        });
-        try {
-            const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer.bind(this);
-            const result = JSON.stringify(value, replacerCb, space);
+    
+    install(): void {
+        if (this._installed++ === 0) {
+            this._jsonFormattersMap.forEach((item) => {
+                item.install();
+            });
+        }
+    }
+    
+    uninstall(): void {
+        if (--this._installed === 0) {
             this._jsonFormattersMap.forEach((item) => {
                 item.uninstall();
             });
+        }
+    }
+
+    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
+        try {
+            this.install();
+            const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer.bind(this);
+            const result = JSON.stringify(value, replacerCb, space);
+            this.uninstall();
             return result;
         }
         catch (err) {
-            this._jsonFormattersMap.forEach((item) => {
-                item.uninstall();
-            });
+            this.uninstall();
             throw err;
         }
     }
