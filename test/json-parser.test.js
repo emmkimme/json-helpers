@@ -129,4 +129,24 @@ describe('JSONParser', () => {
       console.timeEnd('JSONParser.parse - complex json');
     });
   });
+
+
+  describe('circular json', () => {
+    const busEvent = {
+      a: "foo",
+    }
+    busEvent.b = busEvent;
+
+    it('JSONParser.stringify - circular json', () => {
+      let result;
+      console.time('JSONParser.stringify - circular json');
+      try {
+        for (i = 0; i < 10000; ++i) {
+          result = json_tools.JSONParser.stringify(busEvent);
+        }
+      }
+      catch (err) {};
+      console.timeEnd('JSONParser.stringify - circular json');
+    });
+  });
 });
