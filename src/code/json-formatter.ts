@@ -20,10 +20,10 @@ export class JSONFormatter<T extends Object> {
     install() {
         if (this.serialize) {
             try {
-                const jsonFormatter = this;
+                const self = this;
                 Object.defineProperty(this._objectConstructor.prototype, 'toJSON', {
-                    value: (): any => {
-                        return { type: jsonFormatter.objectName, data: jsonFormatter.serialize(this) };
+                    value: function (): any {
+                        return { type: self.objectName, data: self.serialize(this) };
                     },
                     configurable: true,
                     enumerable: false,
@@ -42,9 +42,10 @@ export class JSONFormatter<T extends Object> {
                     Object.defineProperty(this._objectConstructor.prototype, 'toJSON', this._previousToJSON);
                 }
                 else {
-                    // It is costly to delete a property so revert the function 'toJSON' to 'toString'
                     Object.defineProperty(this._objectConstructor.prototype, 'toJSON', {
-                        value: this.toString,
+                        value: function (): any {
+                            return this.toString();
+                        },
                         configurable: true,
                         enumerable: false,
                         writable: true
@@ -63,10 +64,11 @@ export class JSONFormatter<T extends Object> {
         if (this.serialize) {
             try {
                 if (this._previousToJSON) {
-                    Object.defineProperty(this._objectConstructor.prototype, 'toJSON', this._previousToJSON);
+                    const self = this;
+                    Object.defineProperty(this._objectConstructor.prototype, 'toJSON', self._previousToJSON);
                 }
                 else {
-                    delete (this._objectConstructor.prototype as any)['toJSON'];
+                    delete (this._objectConstructor.prototype as any)['toJSON' ];
                 }
             }
             catch (err) {

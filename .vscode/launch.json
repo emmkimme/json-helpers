@@ -13,8 +13,9 @@
                 "args": [
                     // "test/**/*.test.js",
                     // "test/**/perf-map.test.js",
-                    "test/**/perf-tojson.test.js",
+                    // "test/**/perf-tojson.test.js",
                     // "test/**/json-parser.test.js",
+                    "test/**/json-parser-basic.test.js",
                     // "-g=Object", 
                     // "-g=Buffer", 
                     // "-g","Error json", 
