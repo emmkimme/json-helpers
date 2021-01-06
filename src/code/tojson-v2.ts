@@ -3,7 +3,7 @@ import { JSONReplacerImpl, JSONReviverImpl } from './tojson-impl';
 import { JSONSetup, JSONSetupsMap } from './json-setup';
 import type { JSONFormatter } from './json-formatter';
 import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferBinaryJSONFormatter } from './json-formatter-default';
-import type { JSONParser as JSONParserInterface } from './tojson';
+import type { JSONParserInterface } from './tojson';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
 class JSONParserImpl implements JSONParserInterface {

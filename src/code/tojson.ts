@@ -14,7 +14,7 @@ export interface JSONReviver {
     parse(text: string, reviver?: (key: string, value: any) => any): any;
 }
 
-export interface JSONParser {
+export interface JSONParserInterface {
     formatter<T>(jsonFormatter: JSONFormatter<T>): void;
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string
     parse(text: string, reviver?: (key: string, value: any) => any): any;
