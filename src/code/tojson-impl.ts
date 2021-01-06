@@ -1,16 +1,19 @@
 import type { JSONReplacer, JSONReviver } from './tojson';
 import { ToJSONConstants } from './tojson';
-import type { JSONFormattersMap } from './json-formatter';
+import type { JSONSetupsMap } from './json-setup';
 
 // Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
 /** @internal */
 export class JSONReplacerImpl implements JSONReplacer {
-    private _jsonFormattersMap: JSONFormattersMap;
+    private _jsonFormattersMap: JSONSetupsMap;
     private _installed: number;
 
-    constructor(jsonFormattersMap: JSONFormattersMap) {
+    constructor(jsonFormattersMap: JSONSetupsMap) {
         this._jsonFormattersMap = jsonFormattersMap;
         this._installed = 0;
+
+        // callback
+        this.replacer = this.replacer.bind(this)
     }
     
     private replacer(key: string, value: any): any {
@@ -46,7 +49,7 @@ export class JSONReplacerImpl implements JSONReplacer {
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         try {
             this.install();
-            const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer.bind(this);
+            const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer;
             const result = JSON.stringify(value, replacerCb, space);
             this.uninstall();
             return result;
@@ -60,10 +63,13 @@ export class JSONReplacerImpl implements JSONReplacer {
 
 /** @internal */
 export class JSONReviverImpl implements JSONReviver {
-    private _jsonFormattersMap: JSONFormattersMap;
+    private _jsonFormattersMap: JSONSetupsMap;
 
-    constructor(jsonFormattersMap: JSONFormattersMap) {
+    constructor(jsonFormattersMap: JSONSetupsMap) {
         this._jsonFormattersMap = jsonFormattersMap;
+
+        // callback
+        this.reviver = this.reviver.bind(this)
     }
    
     private reviver(key: string, value: any) {
@@ -71,7 +77,7 @@ export class JSONReviverImpl implements JSONReviver {
             if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
-            // Is it JSONFormat ?
+            // Is it JSONFormatter ? - duck typing
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
                 const format = this._jsonFormattersMap.get(value.type);
                 if (format) {
@@ -87,7 +93,7 @@ export class JSONReviverImpl implements JSONReviver {
             if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
-            // Is it JSONFormat ?
+            // Is it JSONFormatter ? - duck typing
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
                 const format = this._jsonFormattersMap.get(value.type);
                 if (format) {
@@ -99,7 +105,7 @@ export class JSONReviverImpl implements JSONReviver {
     }
 
     parse(text: string, reviver?: (key: string, value: any) => any): any {
-        const reviverCb = reviver ? this.reviverChain.bind(this, reviver) : this.reviver.bind(this);
+        const reviverCb = reviver ? this.reviverChain.bind(this, reviver) : this.reviver;
         return JSON.parse(text, reviverCb);
     }
 }

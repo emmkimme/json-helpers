@@ -1,10 +1,7 @@
+import type { JSONFormatter } from "./json-formatter";
+
 export namespace ToJSONConstants {
     export const JSON_TOKEN_UNDEFINED = '_/undefined/_';
-}
-
-export namespace JSONReplacerFactory {
-    export let GetV1: () => JSONReplacer;
-    export let GetV2: () => JSONReplacer;
 }
 
 export interface JSONReplacer {
@@ -13,11 +10,12 @@ export interface JSONReplacer {
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string
 }
 
-export namespace JSONReviverFactory {
-    export let GetV1: () => JSONReviver;
-    export let GetV2: () => JSONReviver;
+export interface JSONReviver {
+    parse(text: string, reviver?: (key: string, value: any) => any): any;
 }
 
-export interface JSONReviver {
+export interface JSONParser {
+    setup<T>(jsonFormatter: JSONFormatter<T>): void;
+    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string
     parse(text: string, reviver?: (key: string, value: any) => any): any;
 }

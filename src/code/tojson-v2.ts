@@ -1,33 +1,39 @@
-import { JSONReplacerFactory, JSONReviverFactory } from './tojson';
-import type { JSONReplacer, JSONReviver } from './tojson';
 import { JSONReplacerImpl, JSONReviverImpl } from './tojson-impl';
 
-import type { JSONFormatter, JSONFormattersMap } from './json-formatter';
-import { dateJSONSupport, errorJSONSupport, typeErrorJSONSupport, bufferJSONSupportBinary } from './json-formatter-default';
-
-const jsonFormattersMap: JSONFormattersMap = new Map<string, JSONFormatter<any>>();
-jsonFormattersMap.set(dateJSONSupport.objectName, dateJSONSupport);
-jsonFormattersMap.set(errorJSONSupport.objectName, errorJSONSupport);
-jsonFormattersMap.set(typeErrorJSONSupport.objectName, typeErrorJSONSupport);
-jsonFormattersMap.set(bufferJSONSupportBinary.objectName, bufferJSONSupportBinary);
-
-const jsonReplacer = new JSONReplacerImpl(jsonFormattersMap);
-JSONReplacerFactory.GetV2 = (): JSONReplacer => {
-    return jsonReplacer;
-}
-
-const jsonReviver = new JSONReviverImpl(jsonFormattersMap);
-JSONReviverFactory.GetV2 = (): JSONReviver => {
-    return jsonReviver;
-}
+import { JSONSetup, JSONSetupsMap } from './json-setup';
+import type { JSONFormatter } from './json-formatter';
+import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferBinaryJSONFormatter } from './json-formatter-default';
+import type { JSONParser as JSONParserInterface } from './tojson';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
-export namespace JSONParserV2 {
-    export function stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
-        return jsonReplacer.stringify(value, replacer, space);
+class JSONParserImpl implements JSONParserInterface {
+    private _jsonSetupsMap: JSONSetupsMap;
+    private _jsonReplacer: JSONReplacerImpl;
+    private _jsonReviver: JSONReviverImpl;
+
+    constructor() {
+        this._jsonSetupsMap = new Map<string, JSONSetup<any>>();
+        this._jsonReplacer = new JSONReplacerImpl(this._jsonSetupsMap);
+        this._jsonReviver = new JSONReviverImpl(this._jsonSetupsMap);
+
+        this.setup<Date>(DateJSONFormatter);
+        this.setup<Error>(ErrorJSONFormatter);
+        this.setup<TypeError>(TypeErrorJSONFormatter);
+        this.setup<Buffer>(BufferBinaryJSONFormatter);
+    }
+    
+    setup<T>(jsonFormatter: JSONFormatter<T>): void {
+        const jsonSetup = new JSONSetup<T>(jsonFormatter);
+        this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
     }
 
-   export function parse(text: string, reviver?: (key: any, value: any) => any): any {
-        return jsonReviver.parse(text, reviver);
+    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
+        return this._jsonReplacer.stringify(value, replacer, space);
+    }
+
+    parse(text: string, reviver?: (key: any, value: any) => any): any {
+        return this._jsonReviver.parse(text, reviver);
     }
 }
+
+export const JSONParserV2: JSONParserInterface = new JSONParserImpl();

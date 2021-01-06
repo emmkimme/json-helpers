@@ -33,21 +33,32 @@ const busEvent = {
         replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
         testDate: new Date()
       }
-    };
+};
 
 const resultStringify = json_tools.JSONParser.stringify(busEvent);
 const mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
+// Date, Buffer, Error are properly restored
+```
 
-// json_tools.JSONParserV2 is far more efficient for buffer serialization (x10 faster) but it overrides the default Buffer.toJSON function
-// So may break some compatibility
+json_tools.JSONParserV2 is far more efficient for buffer serialization (x10 faster) but it overrides the default Buffer.toJSON function
+So may break some compatibility
+
+You can add your own formatter, calling setup()
+
+```ts
+const DateJSONFormatter: JSONFormatter<Date> = {
+    objectConstructor: (Date as unknown) as ObjectConstructor, 
+    serialize: (t: Date) => t.toISOString(), 
+    unserialize: (data: string) => new Date(data)
+};
+
+json_tools.JSONParser.setup<Date>(DateJSONFormatter);
 
 ```
 
-
-
 # MIT License
 
-Copyright (c) 2018 Emmanuel Kimmerlin
+Copyright (c) 2021 Emmanuel Kimmerlin
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
