@@ -52,7 +52,7 @@ const DateJSONFormatter: JSONFormatter<Date> = {
     unserialize: (data: string) => new Date(data)
 };
 
-json_tools.JSONParser.setup<Date>(DateJSONFormatter);
+json_tools.JSONParser.formatter<Date>(DateJSONFormatter);
 
 ```
 

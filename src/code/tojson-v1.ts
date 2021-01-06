@@ -16,13 +16,13 @@ class JSONParserImpl implements JSONParserInterface {
         this._jsonReplacer = new JSONReplacerImpl(this._jsonSetupsMap);
         this._jsonReviver = new JSONReviverImpl(this._jsonSetupsMap);
 
-        this.setup<Date>(DateJSONFormatter);
-        this.setup<Error>(ErrorJSONFormatter);
-        this.setup<TypeError>(TypeErrorJSONFormatter);
-        this.setup<Buffer>(BufferJSONFormatter);
+        this.formatter<Date>(DateJSONFormatter);
+        this.formatter<Error>(ErrorJSONFormatter);
+        this.formatter<TypeError>(TypeErrorJSONFormatter);
+        this.formatter<Buffer>(BufferJSONFormatter);
     }
     
-    setup<T>(jsonFormatter: JSONFormatter<T>): void {
+    formatter<T>(jsonFormatter: JSONFormatter<T>): void {
         const jsonSetup = new JSONSetup<T>(jsonFormatter);
         this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
     }
