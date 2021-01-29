@@ -4,26 +4,31 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BufferBinaryJSONFormatter = exports.BufferJSONFormatter = exports.TypeErrorJSONFormatter = exports.ErrorJSONFormatter = exports.DateJSONFormatter = void 0;
 exports.DateJSONFormatter = {
+    objectType: 'Date',
     objectInstance: new Date(),
     serialize: (t) => t.valueOf(),
     unserialize: (data) => new Date(data)
 };
 exports.ErrorJSONFormatter = {
+    objectType: 'Error',
     objectInstance: new Error(),
     serialize: (t) => t.message,
     unserialize: (data) => new Error(data)
 };
 exports.TypeErrorJSONFormatter = {
+    objectType: 'TypeError',
     objectInstance: new TypeError(),
     serialize: (t) => t.message,
     unserialize: (data) => new TypeError(data)
 };
 exports.BufferJSONFormatter = {
+    objectType: 'Buffer',
     objectInstance: Buffer.alloc(0),
     serialize: null,
     unserialize: (data) => Buffer.from(data)
 };
 exports.BufferBinaryJSONFormatter = {
+    objectType: 'Buffer',
     objectInstance: Buffer.alloc(0),
     serialize: (t) => t.toString('binary'),
     unserialize: (data) => Buffer.from(data, 'binary')

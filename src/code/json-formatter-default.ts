@@ -1,6 +1,7 @@
 import type { JSONFormatter } from './json-formatter';
 
 export const DateJSONFormatter: JSONFormatter<Date> = {
+    objectType: 'Date',
     objectInstance: new Date(),
     // objectConstructor: (Date as unknown) as ObjectConstructor, 
     serialize: (t: Date) => t.valueOf(), 
@@ -9,6 +10,7 @@ export const DateJSONFormatter: JSONFormatter<Date> = {
 
 // We lost name and stack !
 export const ErrorJSONFormatter: JSONFormatter<Error> = {
+    objectType: 'Error',
     objectInstance: new Error(),
     // objectConstructor: (Error as unknown) as ObjectConstructor, 
     serialize: (t: Error) => t.message, 
@@ -17,6 +19,7 @@ export const ErrorJSONFormatter: JSONFormatter<Error> = {
 
 // We lost name and stack !
 export const TypeErrorJSONFormatter: JSONFormatter<TypeError> = {
+    objectType: 'TypeError',
     objectInstance: new TypeError(),
     // objectConstructor: (TypeError as unknown) as ObjectConstructor, 
     serialize: (t: TypeError) => t.message, 
@@ -24,6 +27,7 @@ export const TypeErrorJSONFormatter: JSONFormatter<TypeError> = {
 };
 
 export const BufferJSONFormatter: JSONFormatter<Buffer> = {
+    objectType: 'Buffer',
     objectInstance: Buffer.alloc(0),
     // objectConstructor: (Buffer as unknown) as ObjectConstructor,
     serialize: null, 
@@ -31,6 +35,7 @@ export const BufferJSONFormatter: JSONFormatter<Buffer> = {
 };
 
 export const BufferBinaryJSONFormatter: JSONFormatter<Buffer> = {
+    objectType: 'Buffer',
     objectInstance: Buffer.alloc(0),
     // objectConstructor: (Buffer as unknown) as ObjectConstructor,
     serialize: (t: Buffer) => t.toString('binary'), 

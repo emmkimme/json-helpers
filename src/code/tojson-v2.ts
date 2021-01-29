@@ -27,6 +27,11 @@ class JSONParserImpl implements JSONParserInterface {
         this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
     }
 
+    // reviver<T>(jsonReviver: JSONReviverData<T>): void {
+    //     const jsonSetup = new JSONSetup<T>(jsonFormatter);
+    //     this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
+    // }
+
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         return this._jsonReplacer.stringify(value, replacer, space);
     }
