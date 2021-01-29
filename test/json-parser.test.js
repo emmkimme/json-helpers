@@ -36,26 +36,27 @@ describe('JSONParser', () => {
     });
   });
 
-  describe('small json', () => {
-    let busEvent = {
-      channel: '/electron-common-ipc/myChannel/myRequest',
-      sender: {
-        id: 'MyPeer_1234567890',
-        name: 'MyPeer_customName',
-        process: {
-          type: 'renderer',
-          pid: 2000,
-          rid: 2,
-          wcid: 10,
-          testUndefined: undefined
-        },
-        testArrayUndefined: [12, "str", undefined, 3, null, "end"]
+  const busEvent = {
+    channel: '/electron-common-ipc/myChannel/myRequest',
+    sender: {
+      id: 'MyPeer_1234567890',
+      name: 'MyPeer_customName',
+      date: new Date(),
+      process: {
+        type: 'renderer',
+        pid: 2000,
+        rid: 2,
+        wcid: 10,
+        testUndefined: undefined
       },
-      request: {
-        replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
-      }
-    };
-
+      testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
+    },
+    request: {
+      replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
+    }
+  };
+  
+  describe('small json', () => {
     it('JSON.stringify - small json', () => {
       let result;
       console.time('JSON.stringify - small json');
@@ -70,6 +71,7 @@ describe('JSONParser', () => {
         resultParse = JSON.parse(result);
       }
       console.timeEnd('JSON.parse - small json');
+      assert(ObjectEqual(busEvent, resultParse));
     });
 
     it('JSONParser.stringify - small json', () => {
@@ -86,33 +88,11 @@ describe('JSONParser', () => {
         resultParse = json_tools.JSONParser.parse(result);
       }
       console.timeEnd('JSONParser.parse - small json');
+      assert(ObjectEqual(busEvent, resultParse));
     });
   });
 
   describe('complex json', () => {
-    let busEvent = {
-      channel: '/electron-common-ipc/myChannel/myRequest',
-      sender: {
-        id: 'MyPeer_1234567890',
-        name: 'MyPeer_customName',
-        process: {
-          type: 'renderer',
-          pid: 2000,
-          rid: 2,
-          wcid: 10,
-          testUndefined: undefined
-        },
-        testArrayUndefined: [12, "str", undefined, 3, null, "end"],
-        testBuffer: Buffer.from('ceci est un test'),
-        testError: new Error('Test Error'),
-        testTypeError: new TypeError('Test TypeError'),
-      },
-      request: {
-        replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
-        testDate: new Date()
-      }
-    };
-
     it('JSONParser.stringify - complex json', () => {
       let result;
       console.time('JSONParser.stringify - complex json');
@@ -127,6 +107,7 @@ describe('JSONParser', () => {
         resultParse = json_tools.JSONParser.parse(result);
       }
       console.timeEnd('JSONParser.parse - complex json');
+      assert(ObjectEqual(busEvent, resultParse));
     });
   });
 

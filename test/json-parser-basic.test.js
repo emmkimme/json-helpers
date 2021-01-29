@@ -4,9 +4,12 @@ const expect = chai.expect;
 
 const json_tools = require('../');
 
-describe('JSONParser', () => {
+function ObjectEqual(a1, a2) {
+  return JSON.stringify(a1) === JSON.stringify(a2);
+}
 
-  function TestTypeOf(myValue, nameTypeOf, compare) {
+describe('JSONParser', () => {
+  function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
     it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
       let result;
       console.time(`JSONParser.stringify - ${nameTypeOf}`);
@@ -52,6 +55,17 @@ describe('JSONParser', () => {
     });
   }
 
+  function TestTypeOf(myValue, nameTypeOf, compare) {
+    it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
+      let result = json_tools.JSONParser.stringify(myValue);
+      let resultParse = json_tools.JSONParser.parse(result);
+      assert(compare(myValue, resultParse));
+
+      resultParse = json_tools.JSONParserV2.parse(result);
+      assert(compare(myValue, resultParse));
+    });
+  }
+
   describe('buffer json', () => {
 
     function allocateString(num) {
@@ -87,4 +101,38 @@ describe('JSONParser', () => {
     let myError = new TypeError();
     TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message );
   });
+
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message );
+  });
+
+  const bigJSON = require('./big-data.json');
+  describe('big json', () => {
+    TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
+
+  const complexJSON = {
+    channel: '/electron-common-ipc/myChannel/myRequest',
+    sender: {
+      id: 'MyPeer_1234567890',
+      name: 'MyPeer_customName',
+      date: new Date(),
+      process: {
+        type: 'renderer',
+        pid: 2000,
+        rid: 2,
+        wcid: 10,
+        testUndefined: undefined
+      },
+      testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
+    },
+    request: {
+      replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
+    }
+  };
+  describe('complex json', () => {
+    TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
+
 });

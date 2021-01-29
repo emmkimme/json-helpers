@@ -15,12 +15,14 @@ export class JSONSetup<T extends Object> {
     constructor(jsonFormatter: JSONFormatter<T>) {
         this._jsonFormatter = jsonFormatter;
 
-        this.objectType = jsonFormatter.objectType || jsonFormatter.objectConstructor.name;
+        const objectConstructor = jsonFormatter.objectInstance.constructor;
+
+        this.objectType = jsonFormatter.objectType || objectConstructor.name;
         this.serialize = this._jsonFormatter.serialize;
         this.unserialize = this._jsonFormatter.unserialize;
 
-        if (this.serialize && !this.findFunction(jsonFormatter.objectConstructor, 'toJSON') && !this.findFunction(jsonFormatter.objectConstructor, 'toString')) {
-            this._toJSONPrototype = jsonFormatter.objectConstructor.prototype;
+        if (this.serialize && !this.findFunction(objectConstructor, 'toJSON') && !this.findFunction(objectConstructor, 'toString')) {
+            this._toJSONPrototype = objectConstructor.prototype;
             this._toJSONDescriptor = {
                 value: function (): any {
                     return this.toString();
@@ -32,7 +34,7 @@ export class JSONSetup<T extends Object> {
         }
     }
     
-    protected findFunction(objectConstructor: ObjectConstructor, name: string) {
+    protected findFunction(objectConstructor: Function, name: string) {
         let proto = objectConstructor.prototype;
         this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
         if (this._toJSONDescriptor) {
