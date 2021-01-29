@@ -2,10 +2,10 @@ import { JSONReplacerImpl, JSONReviverImpl } from './json-formatter-impl';
 
 import type { JSONFormatterData, JSONReplacerData, JSONReviverData } from './json-formatter';
 import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJSONFormatter } from './json-formatter-default';
-import type { JSONParser } from './json-parser';
+import type { JSONParserInterface } from './json-parser';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
-class JSONParserV1Impl implements JSONParser {
+class JSONParserV1Impl implements JSONParserInterface {
     private _jsonReplacer: JSONReplacerImpl;
     private _jsonReviver: JSONReviverImpl;
 
@@ -41,4 +41,5 @@ class JSONParserV1Impl implements JSONParser {
     }
 }
 
-export const JSONParserV1: JSONParser = new JSONParserV1Impl();
+export const JSONParserV1: JSONParserInterface = new JSONParserV1Impl();
+export const JSONParser = JSONParserV1;

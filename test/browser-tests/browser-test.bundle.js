@@ -209,7 +209,7 @@ exports.JSONReplacerSetup = JSONReplacerSetup;
 },{}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONParserV1 = void 0;
+exports.JSONParser = exports.JSONParserV1 = void 0;
 const json_formatter_impl_1 = require("./json-formatter-impl");
 const json_formatter_default_1 = require("./json-formatter-default");
 class JSONParserV1Impl {
@@ -239,6 +239,7 @@ class JSONParserV1Impl {
     }
 }
 exports.JSONParserV1 = new JSONParserV1Impl();
+exports.JSONParser = exports.JSONParserV1;
 
 },{"./json-formatter-default":1,"./json-formatter-impl":2}],5:[function(require,module,exports){
 "use strict";
@@ -21866,38 +21867,38 @@ describe('JSONParser', () => {
   });
 });
 
-describe('JSONParser performance', () => {
-  describe('buffer json', () => {
-    TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
-  });
+// describe('JSONParser performance', () => {
+//   describe('buffer json', () => {
+//     TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+//   });
 
-  describe('Date json', () => {
-    let myDate = new Date();
-    TestPerformanceTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
-  });
+//   describe('Date json', () => {
+//     let myDate = new Date();
+//     TestPerformanceTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
+//   });
 
-  describe('Error json', () => {
-    let myError = new Error();
-    TestPerformanceTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
-  });
+//   describe('Error json', () => {
+//     let myError = new Error();
+//     TestPerformanceTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+//   });
 
-  describe('TypeError json', () => {
-    let myError = new TypeError();
-    TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  });
+//   describe('TypeError json', () => {
+//     let myError = new TypeError();
+//     TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+//   });
 
-  describe('TypeError json', () => {
-    let myError = new TypeError();
-    TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  });
+//   describe('TypeError json', () => {
+//     let myError = new TypeError();
+//     TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+//   });
 
-  describe('big json', () => {
-    TestPerformanceTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  });
+//   describe('big json', () => {
+//     TestPerformanceTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+//   });
 
-  describe('complex json', () => {
-    TestPerformanceTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  });
-});
+//   describe('complex json', () => {
+//     TestPerformanceTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+//   });
+// });
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"../":7,"./big-data.json":50,"buffer":11,"chai":12}]},{},[51]);

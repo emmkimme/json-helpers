@@ -118,36 +118,36 @@ describe('JSONParser', () => {
   });
 });
 
-describe('JSONParser performance', () => {
-  describe('buffer json', () => {
-    TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
-  });
+// describe('JSONParser performance', () => {
+//   describe('buffer json', () => {
+//     TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+//   });
 
-  describe('Date json', () => {
-    let myDate = new Date();
-    TestPerformanceTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
-  });
+//   describe('Date json', () => {
+//     let myDate = new Date();
+//     TestPerformanceTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
+//   });
 
-  describe('Error json', () => {
-    let myError = new Error();
-    TestPerformanceTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
-  });
+//   describe('Error json', () => {
+//     let myError = new Error();
+//     TestPerformanceTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+//   });
 
-  describe('TypeError json', () => {
-    let myError = new TypeError();
-    TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  });
+//   describe('TypeError json', () => {
+//     let myError = new TypeError();
+//     TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+//   });
 
-  describe('TypeError json', () => {
-    let myError = new TypeError();
-    TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  });
+//   describe('TypeError json', () => {
+//     let myError = new TypeError();
+//     TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+//   });
 
-  describe('big json', () => {
-    TestPerformanceTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  });
+//   describe('big json', () => {
+//     TestPerformanceTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+//   });
 
-  describe('complex json', () => {
-    TestPerformanceTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  });
-});
+//   describe('complex json', () => {
+//     TestPerformanceTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+//   });
+// });

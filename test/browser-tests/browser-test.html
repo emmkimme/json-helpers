@@ -10,7 +10,8 @@
 <script src="https://cdn.rawgit.com/Automattic/expect.js/0.3.1/index.js"></script>
 <script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
 
-<script>mocha.setup({ uui: 'bdd', slow: '0'})</script>
+<!-- <script>mocha.setup({ uui: 'bdd', slow: '0'})</script> -->
+<script>mocha.setup('bdd')</script>
 <script src="browser-test.bundle.js"></script>
 <script>
     mocha.checkLeaks();
