@@ -19,6 +19,7 @@ const busEvent = {
       sender: {
         id: 'MyPeer_1234567890',
         name: 'MyPeer_customName',
+        date: new Date,
         process: {
           type: 'renderer',
           pid: 2000,
@@ -26,7 +27,7 @@ const busEvent = {
           wcid: 10,
           testUndefined: undefined
         },
-        testArrayUndefined: [12, "str", undefined, 3, null, "end"],
+        testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"],
         testBuffer: Buffer.from('ceci est un test')
       },
       request: {
