@@ -38,6 +38,106 @@ exports.BufferBinaryJSONFormatter = {
 },{"buffer":11}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.JSONReviverImpl = exports.JSONReplacerImpl = void 0;
+const json_parser_1 = require("./json-parser");
+const json_formatter_setup_1 = require("./json-formatter-setup");
+class JSONReplacerImpl {
+    constructor() {
+        this._jsonReplacerSetupsMap = new Map();
+        this._installed = 0;
+        this._replacer = this._replacer.bind(this);
+    }
+    replacer(replacer) {
+        const setup = new json_formatter_setup_1.JSONReplacerSetup(replacer);
+        this._jsonReplacerSetupsMap.set(replacer.objectType, setup);
+    }
+    _replacer(key, value) {
+        if (typeof key === 'undefined') {
+            return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
+        }
+        return value;
+    }
+    _replacerChain(replacer, key, value) {
+        if (typeof key === 'undefined') {
+            return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
+        }
+        return replacer(key, value);
+    }
+    install() {
+        if (this._installed++ === 0) {
+            this._jsonReplacerSetupsMap.forEach((item) => {
+                item.install();
+            });
+        }
+    }
+    uninstall() {
+        if (--this._installed === 0) {
+            this._jsonReplacerSetupsMap.forEach((item) => {
+                item.uninstall();
+            });
+        }
+    }
+    stringify(value, replacer, space) {
+        try {
+            this.install();
+            const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;
+            const result = JSON.stringify(value, replacerCb, space);
+            this.uninstall();
+            return result;
+        }
+        catch (err) {
+            this.uninstall();
+            throw err;
+        }
+    }
+}
+exports.JSONReplacerImpl = JSONReplacerImpl;
+class JSONReviverImpl {
+    constructor() {
+        this._jsonReviversMap = new Map();
+        this._reviver = this._reviver.bind(this);
+    }
+    reviver(reviver) {
+        this._jsonReviversMap.set(reviver.objectType, reviver);
+    }
+    _reviver(key, value) {
+        if (value) {
+            if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
+                return undefined;
+            }
+            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+                const format = this._jsonReviversMap.get(value.type);
+                if (format) {
+                    return format.unserialize(value.data);
+                }
+            }
+        }
+        return value;
+    }
+    _reviverChain(reviver, key, value) {
+        if (value) {
+            if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
+                return undefined;
+            }
+            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+                const format = this._jsonReviversMap.get(value.type);
+                if (format) {
+                    return format.unserialize(value.data);
+                }
+            }
+        }
+        return reviver(key, value);
+    }
+    parse(text, reviver) {
+        const reviverCb = reviver ? this._reviverChain.bind(this, reviver) : this._reviver;
+        return JSON.parse(text, reviverCb);
+    }
+}
+exports.JSONReviverImpl = JSONReviverImpl;
+
+},{"./json-formatter-setup":3,"./json-parser":6}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReplacerSetup = void 0;
 class JSONReplacerSetup {
     constructor(replacer) {
@@ -106,116 +206,16 @@ class JSONReplacerSetup {
 }
 exports.JSONReplacerSetup = JSONReplacerSetup;
 
-},{}],3:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONReviverImpl = exports.JSONReplacerImpl = void 0;
-const tojson_1 = require("./tojson");
-const json_replacer_setup_1 = require("./json-replacer-setup");
-class JSONReplacerImpl {
-    constructor() {
-        this._jsonReplacerSetupsMap = new Map();
-        this._installed = 0;
-        this._replacer = this._replacer.bind(this);
-    }
-    replacer(replacer) {
-        const setup = new json_replacer_setup_1.JSONReplacerSetup(replacer);
-        this._jsonReplacerSetupsMap.set(replacer.objectType, setup);
-    }
-    _replacer(key, value) {
-        if (typeof key === 'undefined') {
-            return tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        return value;
-    }
-    _replacerChain(replacer, key, value) {
-        if (typeof key === 'undefined') {
-            return tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        return replacer(key, value);
-    }
-    install() {
-        if (this._installed++ === 0) {
-            this._jsonReplacerSetupsMap.forEach((item) => {
-                item.install();
-            });
-        }
-    }
-    uninstall() {
-        if (--this._installed === 0) {
-            this._jsonReplacerSetupsMap.forEach((item) => {
-                item.uninstall();
-            });
-        }
-    }
-    stringify(value, replacer, space) {
-        try {
-            this.install();
-            const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;
-            const result = JSON.stringify(value, replacerCb, space);
-            this.uninstall();
-            return result;
-        }
-        catch (err) {
-            this.uninstall();
-            throw err;
-        }
-    }
-}
-exports.JSONReplacerImpl = JSONReplacerImpl;
-class JSONReviverImpl {
-    constructor() {
-        this._jsonReviversMap = new Map();
-        this._reviver = this._reviver.bind(this);
-    }
-    reviver(reviver) {
-        this._jsonReviversMap.set(reviver.objectType, reviver);
-    }
-    _reviver(key, value) {
-        if (value) {
-            if (value === tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
-            }
-            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
-                const format = this._jsonReviversMap.get(value.type);
-                if (format) {
-                    return format.unserialize(value.data);
-                }
-            }
-        }
-        return value;
-    }
-    _reviverChain(reviver, key, value) {
-        if (value) {
-            if (value === tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
-            }
-            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
-                const format = this._jsonReviversMap.get(value.type);
-                if (format) {
-                    return format.unserialize(value.data);
-                }
-            }
-        }
-        return reviver(key, value);
-    }
-    parse(text, reviver) {
-        const reviverCb = reviver ? this._reviverChain.bind(this, reviver) : this._reviver;
-        return JSON.parse(text, reviverCb);
-    }
-}
-exports.JSONReviverImpl = JSONReviverImpl;
-
-},{"./json-replacer-setup":2,"./tojson":6}],4:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONParserV1 = void 0;
-const tojson_impl_1 = require("./tojson-impl");
+const json_formatter_impl_1 = require("./json-formatter-impl");
 const json_formatter_default_1 = require("./json-formatter-default");
 class JSONParserV1Impl {
     constructor() {
-        this._jsonReplacer = new tojson_impl_1.JSONReplacerImpl();
-        this._jsonReviver = new tojson_impl_1.JSONReviverImpl();
+        this._jsonReplacer = new json_formatter_impl_1.JSONReplacerImpl();
+        this._jsonReviver = new json_formatter_impl_1.JSONReviverImpl();
         this.formatter(json_formatter_default_1.DateJSONFormatter);
         this.formatter(json_formatter_default_1.ErrorJSONFormatter);
         this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
@@ -240,16 +240,16 @@ class JSONParserV1Impl {
 }
 exports.JSONParserV1 = new JSONParserV1Impl();
 
-},{"./json-formatter-default":1,"./tojson-impl":3}],5:[function(require,module,exports){
+},{"./json-formatter-default":1,"./json-formatter-impl":2}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONParserV2 = void 0;
-const tojson_impl_1 = require("./tojson-impl");
+const json_formatter_impl_1 = require("./json-formatter-impl");
 const json_formatter_default_1 = require("./json-formatter-default");
 class JSONParserV2Impl {
     constructor() {
-        this._jsonReplacer = new tojson_impl_1.JSONReplacerImpl();
-        this._jsonReviver = new tojson_impl_1.JSONReviverImpl();
+        this._jsonReplacer = new json_formatter_impl_1.JSONReplacerImpl();
+        this._jsonReviver = new json_formatter_impl_1.JSONReviverImpl();
         this.formatter(json_formatter_default_1.DateJSONFormatter);
         this.formatter(json_formatter_default_1.ErrorJSONFormatter);
         this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
@@ -274,7 +274,7 @@ class JSONParserV2Impl {
 }
 exports.JSONParserV2 = new JSONParserV2Impl();
 
-},{"./json-formatter-default":1,"./tojson-impl":3}],6:[function(require,module,exports){
+},{"./json-formatter-default":1,"./json-formatter-impl":2}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ToJSONConstants = void 0;
@@ -311,10 +311,10 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-__exportStar(require("./code/tojson-v1"), exports);
-__exportStar(require("./code/tojson-v2"), exports);
+__exportStar(require("./code/json-parser-v1"), exports);
+__exportStar(require("./code/json-parser-v2"), exports);
 
-},{"./code/tojson-v1":4,"./code/tojson-v2":5}],9:[function(require,module,exports){
+},{"./code/json-parser-v1":4,"./code/json-parser-v2":5}],9:[function(require,module,exports){
 /*!
  * assertion-error
  * Copyright(c) 2013 Jake Luer <jake@qualiancy.com>
@@ -21756,178 +21756,148 @@ function ObjectEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);
 }
 
-describe('JSONParserV1', () => {
-  function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
-    it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
+function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
+  function TestParser(jsonparse) {
+    const jsonparserName = jsonparse.constructor.name;
+    it(`${jsonparserName} - ${nameTypeOf}`, () => {
       let result;
-      console.time(`JSONParserV1.stringify - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParserV1.stringify(myValue);
+      console.time(`${jsonparserName}.stringify - ${nameTypeOf}`);
+      for (i = 0; i < 1000; ++i) {
+        result = jsonparse.stringify(myValue);
       }
-      console.timeEnd(`JSONParserV1.stringify - ${nameTypeOf}`);
-
-      console.time(`JSONParserV2.stringify - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParserV2.stringify(myValue);
-      }
-      console.timeEnd(`JSONParserV2.stringify - ${nameTypeOf}`);
-
-      console.time(`JSON.stringify - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        let localResult = JSON.stringify(myValue, (k,v) => v);
-        localResult;
-      }
-      console.timeEnd(`JSON.stringify - ${nameTypeOf}`);
+      console.timeEnd(`${jsonparserName}.stringify - ${nameTypeOf}`);
 
       let resultParse;
-      console.time(`JSONParserV1.parse - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParserV1.parse(result);
+      console.time(`${jsonparserName}.parse - ${nameTypeOf}`);
+      for (i = 0; i < 1000; ++i) {
+        resultParse = jsonparse.parse(result);
       }
-      console.timeEnd(`JSONParserV1.parse - ${nameTypeOf}`);
-      assert(compare(myValue, resultParse));
-
-      console.time(`JSONParserV2.parse - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParserV2.parse(result);
-      }
-      console.timeEnd(`JSONParserV2.parse - ${nameTypeOf}`);
-      assert(compare(myValue, resultParse));
-
-      console.time(`JSON.parse - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        let localParse = JSON.parse(result, (k,v) => v);
-        localParse;
-      }
-      console.timeEnd(`JSON.parse - ${nameTypeOf}`);
-    });
-
-    it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
-      let result;
-      console.time(`JSONParserV1.stringify - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParserV1.stringify(myValue);
-      }
-      console.timeEnd(`JSONParserV1.stringify - ${nameTypeOf}`);
-
-      console.time(`JSONParserV2.stringify - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParserV2.stringify(myValue);
-      }
-      console.timeEnd(`JSONParserV2.stringify - ${nameTypeOf}`);
-
-      console.time(`JSON.stringify - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        let localResult = JSON.stringify(myValue, (k,v) => v);
-        localResult;
-      }
-      console.timeEnd(`JSON.stringify - ${nameTypeOf}`);
-
-      let resultParse;
-      console.time(`JSONParserV1.parse - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParserV1.parse(result);
-      }
-      console.timeEnd(`JSONParserV1.parse - ${nameTypeOf}`);
-      assert(compare(myValue, resultParse));
-
-      console.time(`JSONParserV2.parse - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParserV2.parse(result);
-      }
-      console.timeEnd(`JSONParserV2.parse - ${nameTypeOf}`);
-      assert(compare(myValue, resultParse));
-
-      console.time(`JSON.parse - ${nameTypeOf}`);
-      for (i = 0; i < 10000; ++i) {
-        let localParse = JSON.parse(result, (k,v) => v);
-        localParse;
-      }
-      console.timeEnd(`JSON.parse - ${nameTypeOf}`);
+      console.timeEnd(`${jsonparserName}.parse - ${nameTypeOf}`);
     });
   }
+  TestParser(json_tools.JSONParserV1);
+  TestParser(json_tools.JSONParserV2);
+  TestParser(JSON);
+}
 
-  function TestTypeOf(myValue, nameTypeOf, compare) {
-    function TestParser(jsonparse) {
-      it(`${jsonparse.constructor.name} - ${nameTypeOf}`, () => {
-        let result = jsonparse.stringify(myValue);
-        let resultParse = jsonparse.parse(result);
-        assert(compare(myValue, resultParse));
-      });
+function TestTypeOf(myValue, nameTypeOf, compare) {
+  function TestParser(jsonparse) {
+    const jsonparserName = jsonparse.constructor.name;
+    it(`${jsonparserName} - ${nameTypeOf}`, () => {
+      let result = jsonparse.stringify(myValue);
+      let resultParse = jsonparse.parse(result);
+      assert(compare(myValue, resultParse));
+    });
+  }
+  TestParser(json_tools.JSONParserV1);
+  TestParser(json_tools.JSONParserV2);
+  // TestParser(JSON);
+}
+
+function allocateString(num) {
+  num = Number(num) / 100;
+  var str = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
+  var result = '';
+  while (true) {
+    if (num & 1) { // (1)
+      result += str;
     }
-    TestParser(json_tools.JSONParserV1);
-    TestParser(json_tools.JSONParserV2);
+    num >>>= 1; // (2)
+    if (num <= 0) break;
+    str += str;
   }
+  return result;
+}
+const myBuffer = Buffer.from(allocateString(1024));
 
+const bigJSON = require('./big-data.json');
+
+const complexJSON = {
+  channel: '/electron-common-ipc/myChannel/myRequest',
+  sender: {
+    id: 'MyPeer_1234567890',
+    name: 'MyPeer_customName',
+    date: new Date(),
+    process: {
+      type: 'renderer',
+      pid: 2000,
+      rid: 2,
+      wcid: 10,
+      testUndefined: undefined
+    },
+    testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
+  },
+  request: {
+    replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
+  }
+};
+
+describe('JSONParser', () => {
   describe('buffer json', () => {
-
-    function allocateString(num) {
-      num = Number(num) / 100;
-      var str ='0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
-      var result = '';
-      while (true) {
-          if (num & 1) { // (1)
-              result += str;
-          }
-          num >>>= 1; // (2)
-          if (num <= 0) break;
-          str += str;
-      }
-      return result;
-  }
-
-    let myBuffer = Buffer.from(allocateString(1024));
-    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0 );
+    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
   });
 
   describe('Date json', () => {
     let myDate = new Date();
-    TestTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf() );
+    TestTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
   });
 
   describe('Error json', () => {
     let myError = new Error();
-    TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message );
+    TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
   });
 
   describe('TypeError json', () => {
     let myError = new TypeError();
-    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message );
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
   });
 
   describe('TypeError json', () => {
     let myError = new TypeError();
-    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message );
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
   });
 
-  const bigJSON = require('./big-data.json');
   describe('big json', () => {
     TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
   });
 
-  const complexJSON = {
-    channel: '/electron-common-ipc/myChannel/myRequest',
-    sender: {
-      id: 'MyPeer_1234567890',
-      name: 'MyPeer_customName',
-      date: new Date(),
-      process: {
-        type: 'renderer',
-        pid: 2000,
-        rid: 2,
-        wcid: 10,
-        testUndefined: undefined
-      },
-      testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
-    },
-    request: {
-      replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
-    }
-  };
   describe('complex json', () => {
     TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
   });
+});
 
+describe('JSONParser performance', () => {
+  describe('buffer json', () => {
+    TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+  });
+
+  describe('Date json', () => {
+    let myDate = new Date();
+    TestPerformanceTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
+  });
+
+  describe('Error json', () => {
+    let myError = new Error();
+    TestPerformanceTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+  });
+
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
+
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
+
+  describe('big json', () => {
+    TestPerformanceTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
+
+  describe('complex json', () => {
+    TestPerformanceTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
 });
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"../":7,"./big-data.json":50,"buffer":11,"chai":12}]},{},[51]);

@@ -1,11 +1,11 @@
-import { JSONReplacerImpl, JSONReviverImpl } from './tojson-impl';
+import { JSONReplacerImpl, JSONReviverImpl } from './json-formatter-impl';
 
 import type { JSONFormatterData, JSONReplacerData, JSONReviverData } from './json-formatter';
-import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJSONFormatter } from './json-formatter-default';
-import type { JSONParserInterface } from './tojson';
+import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferBinaryJSONFormatter } from './json-formatter-default';
+import type { JSONParser } from './json-parser';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
-class JSONParserV1Impl implements JSONParserInterface {
+class JSONParserV2Impl implements JSONParser {
     private _jsonReplacer: JSONReplacerImpl;
     private _jsonReviver: JSONReviverImpl;
 
@@ -16,7 +16,7 @@ class JSONParserV1Impl implements JSONParserInterface {
         this.formatter<Date>(DateJSONFormatter);
         this.formatter<Error>(ErrorJSONFormatter);
         this.formatter<TypeError>(TypeErrorJSONFormatter);
-        this.formatter<Buffer>(BufferJSONFormatter);
+        this.formatter<Buffer>(BufferBinaryJSONFormatter);
     }
     
     reviver<T>(reviver: JSONReviverData<T>): void {
@@ -41,4 +41,4 @@ class JSONParserV1Impl implements JSONParserInterface {
     }
 }
 
-export const JSONParserV1: JSONParserInterface = new JSONParserV1Impl();
+export const JSONParserV2: JSONParser = new JSONParserV2Impl();

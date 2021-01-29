@@ -13,6 +13,5 @@ export interface JSONReplacerData<T> {
     serialize: (t: T) => any;
 }
 
-
 export interface JSONFormatterData<T> extends JSONReplacerData<T>, JSONReviverData<T> {
 }

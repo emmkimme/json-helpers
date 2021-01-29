@@ -56,6 +56,7 @@ export class JSONReplacerSetup<T extends Object> {
             try {
                 const self = this;
                 Object.defineProperty(this._toJSONPrototype, 'toJSON', {
+                    // Beware the 'this' context is the object instance itself
                     value: function (): any {
                         return { type: self.objectType, data: self.serialize(this) };
                     },

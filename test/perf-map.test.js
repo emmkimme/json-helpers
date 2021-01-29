@@ -1,7 +1,7 @@
 const chai = require('chai');
 const assert = chai.assert;
 
-const { JSONSetup } = require('../lib/code/json-setup');
+const { JSONReplacerSetup } = require('../lib/code/json-formatter-setup');
 const { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJSONFormatter } = require('../lib/code/json-formatter-default');
 
 describe('map travel', () => {
@@ -9,7 +9,7 @@ describe('map travel', () => {
   const jsonSetupsMap = new Map();
 
   function setup(jsonFormatter) {
-    const jsonSetup = new JSONSetup(jsonFormatter);
+    const jsonSetup = new JSONReplacerSetup(jsonFormatter);
     jsonSetupsMap.set(jsonSetup.objectName, jsonSetup);
   }
   

@@ -1,6 +1,6 @@
-import type { JSONReplacer, JSONReviver } from './tojson';
-import { ToJSONConstants } from './tojson';
-import { JSONReplacerSetup } from './json-replacer-setup';
+import type { JSONReplacer, JSONReviver } from './json-parser';
+import { ToJSONConstants } from './json-parser';
+import { JSONReplacerSetup } from './json-formatter-setup';
 import type { JSONReplacerData, JSONReviverData } from './json-formatter';
 
 // Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
