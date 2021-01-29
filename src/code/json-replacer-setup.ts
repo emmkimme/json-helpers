@@ -1,25 +1,21 @@
-import type { JSONFormatter } from "./json-formatter";
+import type { JSONReplacerData } from "./json-formatter";
 
-export type JSONSetupsMap = Map<string, JSONSetup<any>>;
-
-export class JSONSetup<T extends Object> {
+export class JSONReplacerSetup<T extends Object> {
     readonly objectType: string;
     
     readonly serialize:(t: T) => any;
-    readonly unserialize?: (data: any) => T;
     
-    protected _jsonFormatter: JSONFormatter<T>;
+    protected _jsonReplacer: JSONReplacerData<T>;
     protected _toJSONDescriptor: PropertyDescriptor;
     protected _toJSONPrototype: Object;
 
-    constructor(jsonFormatter: JSONFormatter<T>) {
-        this._jsonFormatter = jsonFormatter;
+    constructor(replacer: JSONReplacerData<T>) {
+        this._jsonReplacer = replacer;
 
-        const objectConstructor = jsonFormatter.objectInstance.constructor;
+        const objectConstructor = replacer.objectInstance.constructor;
 
-        this.objectType = jsonFormatter.objectType || objectConstructor.name;
-        this.serialize = this._jsonFormatter.serialize;
-        this.unserialize = this._jsonFormatter.unserialize;
+        this.objectType = replacer.objectType || objectConstructor.name;
+        this.serialize = this._jsonReplacer.serialize;
 
         if (this.serialize && !this.findFunction(objectConstructor, 'toJSON') && !this.findFunction(objectConstructor, 'toString')) {
             this._toJSONPrototype = objectConstructor.prototype;

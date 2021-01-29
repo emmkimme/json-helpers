@@ -38,14 +38,13 @@ exports.BufferBinaryJSONFormatter = {
 },{"buffer":11}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONSetup = void 0;
-class JSONSetup {
-    constructor(jsonFormatter) {
-        this._jsonFormatter = jsonFormatter;
-        const objectConstructor = jsonFormatter.objectInstance.constructor;
-        this.objectType = jsonFormatter.objectType || objectConstructor.name;
-        this.serialize = this._jsonFormatter.serialize;
-        this.unserialize = this._jsonFormatter.unserialize;
+exports.JSONReplacerSetup = void 0;
+class JSONReplacerSetup {
+    constructor(replacer) {
+        this._jsonReplacer = replacer;
+        const objectConstructor = replacer.objectInstance.constructor;
+        this.objectType = replacer.objectType || objectConstructor.name;
+        this.serialize = this._jsonReplacer.serialize;
         if (this.serialize && !this.findFunction(objectConstructor, 'toJSON') && !this.findFunction(objectConstructor, 'toString')) {
             this._toJSONPrototype = objectConstructor.prototype;
             this._toJSONDescriptor = {
@@ -105,26 +104,31 @@ class JSONSetup {
         }
     }
 }
-exports.JSONSetup = JSONSetup;
+exports.JSONReplacerSetup = JSONReplacerSetup;
 
 },{}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReviverImpl = exports.JSONReplacerImpl = void 0;
 const tojson_1 = require("./tojson");
+const json_replacer_setup_1 = require("./json-replacer-setup");
 class JSONReplacerImpl {
-    constructor(jsonFormattersMap) {
-        this._jsonFormattersMap = jsonFormattersMap;
+    constructor() {
+        this._jsonReplacerSetupsMap = new Map();
         this._installed = 0;
-        this.replacer = this.replacer.bind(this);
+        this._replacer = this._replacer.bind(this);
     }
-    replacer(key, value) {
+    replacer(replacer) {
+        const setup = new json_replacer_setup_1.JSONReplacerSetup(replacer);
+        this._jsonReplacerSetupsMap.set(replacer.objectType, setup);
+    }
+    _replacer(key, value) {
         if (typeof key === 'undefined') {
             return tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return value;
     }
-    replacerChain(replacer, key, value) {
+    _replacerChain(replacer, key, value) {
         if (typeof key === 'undefined') {
             return tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
@@ -132,14 +136,14 @@ class JSONReplacerImpl {
     }
     install() {
         if (this._installed++ === 0) {
-            this._jsonFormattersMap.forEach((item) => {
+            this._jsonReplacerSetupsMap.forEach((item) => {
                 item.install();
             });
         }
     }
     uninstall() {
         if (--this._installed === 0) {
-            this._jsonFormattersMap.forEach((item) => {
+            this._jsonReplacerSetupsMap.forEach((item) => {
                 item.uninstall();
             });
         }
@@ -147,7 +151,7 @@ class JSONReplacerImpl {
     stringify(value, replacer, space) {
         try {
             this.install();
-            const replacerCb = replacer ? this.replacerChain.bind(this, replacer) : this.replacer;
+            const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;
             const result = JSON.stringify(value, replacerCb, space);
             this.uninstall();
             return result;
@@ -160,17 +164,20 @@ class JSONReplacerImpl {
 }
 exports.JSONReplacerImpl = JSONReplacerImpl;
 class JSONReviverImpl {
-    constructor(jsonFormattersMap) {
-        this._jsonFormattersMap = jsonFormattersMap;
-        this.reviver = this.reviver.bind(this);
+    constructor() {
+        this._jsonReviversMap = new Map();
+        this._reviver = this._reviver.bind(this);
     }
-    reviver(key, value) {
+    reviver(reviver) {
+        this._jsonReviversMap.set(reviver.objectType, reviver);
+    }
+    _reviver(key, value) {
         if (value) {
             if (value === tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
-                const format = this._jsonFormattersMap.get(value.type);
+                const format = this._jsonReviversMap.get(value.type);
                 if (format) {
                     return format.unserialize(value.data);
                 }
@@ -178,13 +185,13 @@ class JSONReviverImpl {
         }
         return value;
     }
-    reviverChain(reviver, key, value) {
+    _reviverChain(reviver, key, value) {
         if (value) {
             if (value === tojson_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
             if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
-                const format = this._jsonFormattersMap.get(value.type);
+                const format = this._jsonReviversMap.get(value.type);
                 if (format) {
                     return format.unserialize(value.data);
                 }
@@ -193,32 +200,36 @@ class JSONReviverImpl {
         return reviver(key, value);
     }
     parse(text, reviver) {
-        const reviverCb = reviver ? this.reviverChain.bind(this, reviver) : this.reviver;
+        const reviverCb = reviver ? this._reviverChain.bind(this, reviver) : this._reviver;
         return JSON.parse(text, reviverCb);
     }
 }
 exports.JSONReviverImpl = JSONReviverImpl;
 
-},{"./tojson":6}],4:[function(require,module,exports){
+},{"./json-replacer-setup":2,"./tojson":6}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONParser = void 0;
+exports.JSONParserV1 = void 0;
 const tojson_impl_1 = require("./tojson-impl");
-const json_setup_1 = require("./json-setup");
 const json_formatter_default_1 = require("./json-formatter-default");
-class JSONParserImpl {
+class JSONParserV1Impl {
     constructor() {
-        this._jsonSetupsMap = new Map();
-        this._jsonReplacer = new tojson_impl_1.JSONReplacerImpl(this._jsonSetupsMap);
-        this._jsonReviver = new tojson_impl_1.JSONReviverImpl(this._jsonSetupsMap);
+        this._jsonReplacer = new tojson_impl_1.JSONReplacerImpl();
+        this._jsonReviver = new tojson_impl_1.JSONReviverImpl();
         this.formatter(json_formatter_default_1.DateJSONFormatter);
         this.formatter(json_formatter_default_1.ErrorJSONFormatter);
         this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
         this.formatter(json_formatter_default_1.BufferJSONFormatter);
     }
+    reviver(reviver) {
+        this._jsonReviver.reviver(reviver);
+    }
+    replacer(replacer) {
+        this._jsonReplacer.replacer(replacer);
+    }
     formatter(jsonFormatter) {
-        const jsonSetup = new json_setup_1.JSONSetup(jsonFormatter);
-        this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
+        this._jsonReplacer.replacer(jsonFormatter);
+        this._jsonReviver.reviver(jsonFormatter);
     }
     stringify(value, replacer, space) {
         return this._jsonReplacer.stringify(value, replacer, space);
@@ -227,28 +238,32 @@ class JSONParserImpl {
         return this._jsonReviver.parse(text, reviver);
     }
 }
-exports.JSONParser = new JSONParserImpl();
+exports.JSONParserV1 = new JSONParserV1Impl();
 
-},{"./json-formatter-default":1,"./json-setup":2,"./tojson-impl":3}],5:[function(require,module,exports){
+},{"./json-formatter-default":1,"./tojson-impl":3}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONParserV2 = void 0;
 const tojson_impl_1 = require("./tojson-impl");
-const json_setup_1 = require("./json-setup");
 const json_formatter_default_1 = require("./json-formatter-default");
-class JSONParserImpl {
+class JSONParserV2Impl {
     constructor() {
-        this._jsonSetupsMap = new Map();
-        this._jsonReplacer = new tojson_impl_1.JSONReplacerImpl(this._jsonSetupsMap);
-        this._jsonReviver = new tojson_impl_1.JSONReviverImpl(this._jsonSetupsMap);
+        this._jsonReplacer = new tojson_impl_1.JSONReplacerImpl();
+        this._jsonReviver = new tojson_impl_1.JSONReviverImpl();
         this.formatter(json_formatter_default_1.DateJSONFormatter);
         this.formatter(json_formatter_default_1.ErrorJSONFormatter);
         this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
         this.formatter(json_formatter_default_1.BufferBinaryJSONFormatter);
     }
+    reviver(reviver) {
+        this._jsonReviver.reviver(reviver);
+    }
+    replacer(replacer) {
+        this._jsonReplacer.replacer(replacer);
+    }
     formatter(jsonFormatter) {
-        const jsonSetup = new json_setup_1.JSONSetup(jsonFormatter);
-        this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
+        this._jsonReplacer.replacer(jsonFormatter);
+        this._jsonReviver.reviver(jsonFormatter);
     }
     stringify(value, replacer, space) {
         return this._jsonReplacer.stringify(value, replacer, space);
@@ -257,9 +272,9 @@ class JSONParserImpl {
         return this._jsonReviver.parse(text, reviver);
     }
 }
-exports.JSONParserV2 = new JSONParserImpl();
+exports.JSONParserV2 = new JSONParserV2Impl();
 
-},{"./json-formatter-default":1,"./json-setup":2,"./tojson-impl":3}],6:[function(require,module,exports){
+},{"./json-formatter-default":1,"./tojson-impl":3}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ToJSONConstants = void 0;
@@ -21741,15 +21756,15 @@ function ObjectEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);
 }
 
-describe('JSONParser', () => {
+describe('JSONParserV1', () => {
   function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
     it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
       let result;
-      console.time(`JSONParser.stringify - ${nameTypeOf}`);
+      console.time(`JSONParserV1.stringify - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParser.stringify(myValue);
+        result = json_tools.JSONParserV1.stringify(myValue);
       }
-      console.timeEnd(`JSONParser.stringify - ${nameTypeOf}`);
+      console.timeEnd(`JSONParserV1.stringify - ${nameTypeOf}`);
 
       console.time(`JSONParserV2.stringify - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
@@ -21765,11 +21780,55 @@ describe('JSONParser', () => {
       console.timeEnd(`JSON.stringify - ${nameTypeOf}`);
 
       let resultParse;
-      console.time(`JSONParser.parse - ${nameTypeOf}`);
+      console.time(`JSONParserV1.parse - ${nameTypeOf}`);
       for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParser.parse(result);
+        resultParse = json_tools.JSONParserV1.parse(result);
       }
-      console.timeEnd(`JSONParser.parse - ${nameTypeOf}`);
+      console.timeEnd(`JSONParserV1.parse - ${nameTypeOf}`);
+      assert(compare(myValue, resultParse));
+
+      console.time(`JSONParserV2.parse - ${nameTypeOf}`);
+      for (i = 0; i < 10000; ++i) {
+        resultParse = json_tools.JSONParserV2.parse(result);
+      }
+      console.timeEnd(`JSONParserV2.parse - ${nameTypeOf}`);
+      assert(compare(myValue, resultParse));
+
+      console.time(`JSON.parse - ${nameTypeOf}`);
+      for (i = 0; i < 10000; ++i) {
+        let localParse = JSON.parse(result, (k,v) => v);
+        localParse;
+      }
+      console.timeEnd(`JSON.parse - ${nameTypeOf}`);
+    });
+
+    it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
+      let result;
+      console.time(`JSONParserV1.stringify - ${nameTypeOf}`);
+      for (i = 0; i < 10000; ++i) {
+        result = json_tools.JSONParserV1.stringify(myValue);
+      }
+      console.timeEnd(`JSONParserV1.stringify - ${nameTypeOf}`);
+
+      console.time(`JSONParserV2.stringify - ${nameTypeOf}`);
+      for (i = 0; i < 10000; ++i) {
+        result = json_tools.JSONParserV2.stringify(myValue);
+      }
+      console.timeEnd(`JSONParserV2.stringify - ${nameTypeOf}`);
+
+      console.time(`JSON.stringify - ${nameTypeOf}`);
+      for (i = 0; i < 10000; ++i) {
+        let localResult = JSON.stringify(myValue, (k,v) => v);
+        localResult;
+      }
+      console.timeEnd(`JSON.stringify - ${nameTypeOf}`);
+
+      let resultParse;
+      console.time(`JSONParserV1.parse - ${nameTypeOf}`);
+      for (i = 0; i < 10000; ++i) {
+        resultParse = json_tools.JSONParserV1.parse(result);
+      }
+      console.timeEnd(`JSONParserV1.parse - ${nameTypeOf}`);
       assert(compare(myValue, resultParse));
 
       console.time(`JSONParserV2.parse - ${nameTypeOf}`);
@@ -21789,14 +21848,15 @@ describe('JSONParser', () => {
   }
 
   function TestTypeOf(myValue, nameTypeOf, compare) {
-    it(`JSONParserV2.stringify - ${nameTypeOf}`, () => {
-      let result = json_tools.JSONParser.stringify(myValue);
-      let resultParse = json_tools.JSONParser.parse(result);
-      assert(compare(myValue, resultParse));
-
-      resultParse = json_tools.JSONParserV2.parse(result);
-      assert(compare(myValue, resultParse));
-    });
+    function TestParser(jsonparse) {
+      it(`${jsonparse.constructor.name} - ${nameTypeOf}`, () => {
+        let result = jsonparse.stringify(myValue);
+        let resultParse = jsonparse.parse(result);
+        assert(compare(myValue, resultParse));
+      });
+    }
+    TestParser(json_tools.JSONParserV1);
+    TestParser(json_tools.JSONParserV2);
   }
 
   describe('buffer json', () => {

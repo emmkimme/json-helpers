@@ -1,6 +1,6 @@
-import type { JSONFormatter } from './json-formatter';
+import type { JSONFormatterData } from './json-formatter';
 
-export const DateJSONFormatter: JSONFormatter<Date> = {
+export const DateJSONFormatter: JSONFormatterData<Date> = {
     objectType: 'Date',
     objectInstance: new Date(),
     // objectConstructor: (Date as unknown) as ObjectConstructor, 
@@ -9,7 +9,7 @@ export const DateJSONFormatter: JSONFormatter<Date> = {
 };
 
 // We lost name and stack !
-export const ErrorJSONFormatter: JSONFormatter<Error> = {
+export const ErrorJSONFormatter: JSONFormatterData<Error> = {
     objectType: 'Error',
     objectInstance: new Error(),
     // objectConstructor: (Error as unknown) as ObjectConstructor, 
@@ -18,7 +18,7 @@ export const ErrorJSONFormatter: JSONFormatter<Error> = {
 };
 
 // We lost name and stack !
-export const TypeErrorJSONFormatter: JSONFormatter<TypeError> = {
+export const TypeErrorJSONFormatter: JSONFormatterData<TypeError> = {
     objectType: 'TypeError',
     objectInstance: new TypeError(),
     // objectConstructor: (TypeError as unknown) as ObjectConstructor, 
@@ -26,7 +26,7 @@ export const TypeErrorJSONFormatter: JSONFormatter<TypeError> = {
     unserialize: (data: string) => new TypeError(data)
 };
 
-export const BufferJSONFormatter: JSONFormatter<Buffer> = {
+export const BufferJSONFormatter: JSONFormatterData<Buffer> = {
     objectType: 'Buffer',
     objectInstance: Buffer.alloc(0),
     // objectConstructor: (Buffer as unknown) as ObjectConstructor,
@@ -34,7 +34,7 @@ export const BufferJSONFormatter: JSONFormatter<Buffer> = {
     unserialize: (data: string) => Buffer.from(data) 
 };
 
-export const BufferBinaryJSONFormatter: JSONFormatter<Buffer> = {
+export const BufferBinaryJSONFormatter: JSONFormatterData<Buffer> = {
     objectType: 'Buffer',
     objectInstance: Buffer.alloc(0),
     // objectConstructor: (Buffer as unknown) as ObjectConstructor,

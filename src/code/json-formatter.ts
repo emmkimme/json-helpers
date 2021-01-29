@@ -14,5 +14,5 @@ export interface JSONReplacerData<T> {
 }
 
 
-export interface JSONFormatter<T> extends JSONReplacerData<T>, JSONReviverData<T> {
+export interface JSONFormatterData<T> extends JSONReplacerData<T>, JSONReviverData<T> {
 }

@@ -1,20 +1,17 @@
 import { JSONReplacerImpl, JSONReviverImpl } from './tojson-impl';
 
-import { JSONSetup, JSONSetupsMap } from './json-setup';
-import type { JSONFormatter } from './json-formatter';
+import type { JSONFormatterData, JSONReplacerData, JSONReviverData } from './json-formatter';
 import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferBinaryJSONFormatter } from './json-formatter-default';
 import type { JSONParserInterface } from './tojson';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
-class JSONParserImpl implements JSONParserInterface {
-    private _jsonSetupsMap: JSONSetupsMap;
+class JSONParserV2Impl implements JSONParserInterface {
     private _jsonReplacer: JSONReplacerImpl;
     private _jsonReviver: JSONReviverImpl;
 
     constructor() {
-        this._jsonSetupsMap = new Map<string, JSONSetup<any>>();
-        this._jsonReplacer = new JSONReplacerImpl(this._jsonSetupsMap);
-        this._jsonReviver = new JSONReviverImpl(this._jsonSetupsMap);
+        this._jsonReplacer = new JSONReplacerImpl();
+        this._jsonReviver = new JSONReviverImpl();
 
         this.formatter<Date>(DateJSONFormatter);
         this.formatter<Error>(ErrorJSONFormatter);
@@ -22,15 +19,18 @@ class JSONParserImpl implements JSONParserInterface {
         this.formatter<Buffer>(BufferBinaryJSONFormatter);
     }
     
-    formatter<T>(jsonFormatter: JSONFormatter<T>): void {
-        const jsonSetup = new JSONSetup<T>(jsonFormatter);
-        this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
+    reviver<T>(reviver: JSONReviverData<T>): void {
+        this._jsonReviver.reviver(reviver);
     }
 
-    // reviver<T>(jsonReviver: JSONReviverData<T>): void {
-    //     const jsonSetup = new JSONSetup<T>(jsonFormatter);
-    //     this._jsonSetupsMap.set(jsonSetup.objectType, jsonSetup);
-    // }
+    replacer<T>(replacer: JSONReplacerData<T>): void {
+        this._jsonReplacer.replacer(replacer);
+    }
+
+    formatter<T>(jsonFormatter: JSONFormatterData<T>): void {
+        this._jsonReplacer.replacer(jsonFormatter);
+        this._jsonReviver.reviver(jsonFormatter);
+    }
 
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         return this._jsonReplacer.stringify(value, replacer, space);
@@ -41,4 +41,4 @@ class JSONParserImpl implements JSONParserInterface {
     }
 }
 
-export const JSONParserV2: JSONParserInterface = new JSONParserImpl();
+export const JSONParserV2: JSONParserInterface = new JSONParserV2Impl();

@@ -60,7 +60,7 @@
     "clean-declaration-dts": "del-cli ./lib/code/*.d.ts",
     "browserify-test": "npm run browserify-browser-test-js",
     "browserify-browser-test-js": "browserify -o ./test/browser-tests/browser-test.bundle.js -x electron ./test/browser-tests/browser-test.js",
-    "test": "mocha test --recursive --no-timeouts",
+    "test": "mocha test/*.test.js --slow 0 --recursive --no-timeouts",
     "tsc": "tsc",
     "tslint": "tslint",
     "deploy": "npm publish ./ --registry https://registry.npmjs.org/"

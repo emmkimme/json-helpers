@@ -36,8 +36,8 @@ const busEvent = {
       }
 };
 
-const resultStringify = json_tools.JSONParser.stringify(busEvent);
-const mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
+const resultStringify = json_tools.JSONParserV1.stringify(busEvent);
+const mirror_busEvent = json_tools.JSONParserV1.parse(resultStringify);
 // Date, Buffer, Error are properly restored
 ```
 
@@ -53,7 +53,7 @@ const DateJSONFormatter: JSONFormatter<Date> = {
     unserialize: (data: string) => new Date(data)
 };
 
-json_tools.JSONParser.formatter<Date>(DateJSONFormatter);
+json_tools.JSONParserV1.formatter<Date>(DateJSONFormatter);
 
 ```
 
