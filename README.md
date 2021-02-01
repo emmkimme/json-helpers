@@ -1,5 +1,6 @@
 # json-helpers
 Provide a new stringify/parser able to manage 'undefined', Date object and Buffer object.
+You can add your own class formatter.
 
 
 # Installation
@@ -19,6 +20,7 @@ const busEvent = {
       sender: {
         id: 'MyPeer_1234567890',
         name: 'MyPeer_customName',
+        date: new Date,
         process: {
           type: 'renderer',
           pid: 2000,
@@ -26,7 +28,7 @@ const busEvent = {
           wcid: 10,
           testUndefined: undefined
         },
-        testArrayUndefined: [12, "str", undefined, 3, null, "end"],
+        testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"],
         testBuffer: Buffer.from('ceci est un test')
       },
       request: {
@@ -35,24 +37,25 @@ const busEvent = {
       }
 };
 
-const resultStringify = json_tools.JSONParser.stringify(busEvent);
-const mirror_busEvent = json_tools.JSONParser.parse(resultStringify);
+const resultStringify = json_tools.JSONParserV1.stringify(busEvent);
+const mirror_busEvent = json_tools.JSONParserV1.parse(resultStringify);
 // Date, Buffer, Error are properly restored
 ```
 
 json_tools.JSONParserV2 is far more efficient for buffer serialization (x10 faster) but it overrides the default Buffer.toJSON function
 So may break some compatibility
 
-You can add your own formatter, calling setup()
+You can add your own formatter, calling formatter()
 
 ```ts
 const DateJSONFormatter: JSONFormatter<Date> = {
+    objectType: 'MyDate',
     objectConstructor: (Date as unknown) as ObjectConstructor, 
     serialize: (t: Date) => t.toISOString(), 
     unserialize: (data: string) => new Date(data)
 };
 
-json_tools.JSONParser.formatter<Date>(DateJSONFormatter);
+json_tools.JSONParserV1.formatter<Date>(DateJSONFormatter);
 
 ```
 

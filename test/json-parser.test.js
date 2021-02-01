@@ -2,151 +2,152 @@ const chai = require('chai');
 const assert = chai.assert;
 const expect = chai.expect;
 
-const json_tools = require('../');
-
-const bigData = require('./big-data.json');
+const json_tools = require('../lib/json-helpers');
 
 function ObjectEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);
 }
 
+function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
+  function TestParser(jsonparse) {
+    const jsonparserName = jsonparse.constructor.name;
+    it(`${jsonparserName} - ${nameTypeOf}`, () => {
+      let result;
+      console.time(`${jsonparserName}.stringify - ${nameTypeOf}`);
+      for (i = 0; i < 1000; ++i) {
+        result = jsonparse.stringify(myValue);
+      }
+      console.timeEnd(`${jsonparserName}.stringify - ${nameTypeOf}`);
+
+      let resultParse;
+      console.time(`${jsonparserName}.parse - ${nameTypeOf}`);
+      for (i = 0; i < 1000; ++i) {
+        resultParse = jsonparse.parse(result);
+      }
+      console.timeEnd(`${jsonparserName}.parse - ${nameTypeOf}`);
+    });
+  }
+  TestParser(json_tools.JSONParserV1);
+  TestParser(json_tools.JSONParserV2);
+  TestParser(JSON);
+}
+
+function TestTypeOf(myValue, nameTypeOf, compare) {
+  function TestParser(jsonparse) {
+    const jsonparserName = jsonparse.constructor.name;
+    it(`${jsonparserName} - ${nameTypeOf}`, () => {
+      let result = jsonparse.stringify(myValue);
+      let resultParse = jsonparse.parse(result);
+      assert(compare(myValue, resultParse));
+    });
+  }
+  TestParser(json_tools.JSONParserV1);
+  TestParser(json_tools.JSONParserV2);
+  // TestParser(JSON);
+}
+
+function allocateString(num) {
+  num = Number(num) / 100;
+  var str = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
+  var result = '';
+  while (true) {
+    if (num & 1) { // (1)
+      result += str;
+    }
+    num >>>= 1; // (2)
+    if (num <= 0) break;
+    str += str;
+  }
+  return result;
+}
+const myBuffer = Buffer.from(allocateString(1024));
+
+const bigJSON = require('./big-data.json');
+
+const complexJSON = {
+  channel: '/electron-common-ipc/myChannel/myRequest',
+  sender: {
+    id: 'MyPeer_1234567890',
+    name: 'MyPeer_customName',
+    date: new Date(),
+    process: {
+      type: 'renderer',
+      pid: 2000,
+      rid: 2,
+      wcid: 10,
+      testUndefined: undefined
+    },
+    testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
+  },
+  request: {
+    replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
+  }
+};
+
 describe('JSONParser', () => {
-
-  describe('big json', () => {
-    it('JSON.stringify', () => {
-      console.time('JSON.stringify - big json');
-      let result = JSON.stringify(bigData);
-      console.timeEnd('JSON.stringify - big json');
-
-      console.time('JSON.parse - big json');
-      let newbigdata = JSON.parse(result);
-      console.timeEnd('JSON.parse - big json');
-      assert(ObjectEqual(bigData, newbigdata));
-    });
-
-    it('JSONParser.stringify', () => {
-      console.time('JSONParser.stringify - big json');
-      let result = json_tools.JSONParser.stringify(bigData);
-      console.timeEnd('JSONParser.stringify - big json');
-
-      console.time('JSONParser.parse - big json');
-      let newbigdata = json_tools.JSONParser.parse(result);
-      console.timeEnd('JSONParser.parse - big json');
-      assert(ObjectEqual(bigData, newbigdata));
-    });
+  describe('buffer json', () => {
+    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
   });
 
-  describe('small json', () => {
-    let busEvent = {
-      channel: '/electron-common-ipc/myChannel/myRequest',
-      sender: {
-        id: 'MyPeer_1234567890',
-        name: 'MyPeer_customName',
-        process: {
-          type: 'renderer',
-          pid: 2000,
-          rid: 2,
-          wcid: 10,
-          testUndefined: undefined
-        },
-        testArrayUndefined: [12, "str", undefined, 3, null, "end"]
-      },
-      request: {
-        replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
-      }
-    };
+  describe('Date json', () => {
+    let myDate = new Date();
+    TestTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
+  });
 
-    it('JSON.stringify - small json', () => {
-      let result;
-      console.time('JSON.stringify - small json');
-      for (i = 0; i < 10000; ++i) {
-        result = JSON.stringify(busEvent);
-      }
-      console.timeEnd('JSON.stringify - small json');
+  describe('Error json', () => {
+    let myError = new Error();
+    TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+  });
 
-      let resultParse;
-      console.time('JSON.parse - small json');
-      for (i = 0; i < 10000; ++i) {
-        resultParse = JSON.parse(result);
-      }
-      console.timeEnd('JSON.parse - small json');
-    });
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
 
-    it('JSONParser.stringify - small json', () => {
-      let result;
-      console.time('JSONParser.stringify - small json');
-      for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParser.stringify(busEvent);
-      }
-      console.timeEnd('JSONParser.stringify - small json');
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
 
-      let resultParse;
-      console.time('JSONParser.parse - small json');
-      for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParser.parse(result);
-      }
-      console.timeEnd('JSONParser.parse - small json');
-    });
+  describe('big json', () => {
+    TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
   });
 
   describe('complex json', () => {
-    let busEvent = {
-      channel: '/electron-common-ipc/myChannel/myRequest',
-      sender: {
-        id: 'MyPeer_1234567890',
-        name: 'MyPeer_customName',
-        process: {
-          type: 'renderer',
-          pid: 2000,
-          rid: 2,
-          wcid: 10,
-          testUndefined: undefined
-        },
-        testArrayUndefined: [12, "str", undefined, 3, null, "end"],
-        testBuffer: Buffer.from('ceci est un test'),
-        testError: new Error('Test Error'),
-        testTypeError: new TypeError('Test TypeError'),
-      },
-      request: {
-        replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
-        testDate: new Date()
-      }
-    };
-
-    it('JSONParser.stringify - complex json', () => {
-      let result;
-      console.time('JSONParser.stringify - complex json');
-      for (i = 0; i < 10000; ++i) {
-        result = json_tools.JSONParser.stringify(busEvent);
-      }
-      console.timeEnd('JSONParser.stringify - complex json');
-
-      let resultParse;
-      console.time('JSONParser.parse - complex json');
-      for (i = 0; i < 10000; ++i) {
-        resultParse = json_tools.JSONParser.parse(result);
-      }
-      console.timeEnd('JSONParser.parse - complex json');
-    });
-  });
-
-
-  describe('circular json', () => {
-    const busEvent = {
-      a: "foo",
-    }
-    busEvent.b = busEvent;
-
-    it('JSONParser.stringify - circular json', () => {
-      let result;
-      console.time('JSONParser.stringify - circular json');
-      try {
-        for (i = 0; i < 10000; ++i) {
-          result = json_tools.JSONParser.stringify(busEvent);
-        }
-      }
-      catch (err) {};
-      console.timeEnd('JSONParser.stringify - circular json');
-    });
+    TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
   });
 });
+
+// describe('JSONParser performance', () => {
+//   describe('buffer json', () => {
+//     TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+//   });
+
+//   describe('Date json', () => {
+//     let myDate = new Date();
+//     TestPerformanceTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
+//   });
+
+//   describe('Error json', () => {
+//     let myError = new Error();
+//     TestPerformanceTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+//   });
+
+//   describe('TypeError json', () => {
+//     let myError = new TypeError();
+//     TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+//   });
+
+//   describe('TypeError json', () => {
+//     let myError = new TypeError();
+//     TestPerformanceTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+//   });
+
+//   describe('big json', () => {
+//     TestPerformanceTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+//   });
+
+//   describe('complex json', () => {
+//     TestPerformanceTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+//   });
+// });
