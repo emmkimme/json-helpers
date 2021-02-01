@@ -5,42 +5,115 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BufferBinaryJSONFormatter = exports.BufferJSONFormatter = exports.TypeErrorJSONFormatter = exports.ErrorJSONFormatter = exports.DateJSONFormatter = void 0;
 exports.DateJSONFormatter = {
     objectType: 'Date',
-    objectInstance: new Date(),
+    objectConstructor: Date,
     serialize: (t) => t.valueOf(),
     unserialize: (data) => new Date(data)
 };
 exports.ErrorJSONFormatter = {
     objectType: 'Error',
-    objectInstance: new Error(),
+    objectConstructor: Error,
     serialize: (t) => t.message,
     unserialize: (data) => new Error(data)
 };
 exports.TypeErrorJSONFormatter = {
     objectType: 'TypeError',
-    objectInstance: new TypeError(),
+    objectConstructor: TypeError,
     serialize: (t) => t.message,
     unserialize: (data) => new TypeError(data)
 };
 exports.BufferJSONFormatter = {
     objectType: 'Buffer',
-    objectInstance: Buffer.alloc(0),
+    objectConstructor: Buffer,
     serialize: null,
     unserialize: (data) => Buffer.from(data)
 };
 exports.BufferBinaryJSONFormatter = {
     objectType: 'Buffer',
-    objectInstance: Buffer.alloc(0),
+    objectConstructor: Buffer,
     serialize: (t) => t.toString('binary'),
     unserialize: (data) => Buffer.from(data, 'binary')
 };
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":11}],2:[function(require,module,exports){
+},{"buffer":12}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONReviverImpl = exports.JSONReplacerImpl = void 0;
+exports.JSONParserImpl = void 0;
+const json_replacer_impl_1 = require("./json-replacer-impl");
+const json_reviver_impl_1 = require("./json-reviver-impl");
+class JSONParserImpl {
+    constructor() {
+        this._jsonReplacer = new json_replacer_impl_1.JSONReplacerImpl();
+        this._jsonReviver = new json_reviver_impl_1.JSONReviverImpl();
+    }
+    reviver(reviver) {
+        this._jsonReviver.reviver(reviver);
+    }
+    replacer(replacer) {
+        this._jsonReplacer.replacer(replacer);
+    }
+    formatter(jsonFormatter) {
+        this._jsonReplacer.replacer(jsonFormatter);
+        this._jsonReviver.reviver(jsonFormatter);
+    }
+    stringify(value, replacer, space) {
+        return this._jsonReplacer.stringify(value, replacer, space);
+    }
+    parse(text, reviver) {
+        return this._jsonReviver.parse(text, reviver);
+    }
+}
+exports.JSONParserImpl = JSONParserImpl;
+
+},{"./json-replacer-impl":6,"./json-reviver-impl":7}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.JSONParser = exports.JSONParserV1 = void 0;
+const json_formatter_default_1 = require("./json-formatter-default");
+const json_parser_impl_1 = require("./json-parser-impl");
+class JSONParserV1Impl extends json_parser_impl_1.JSONParserImpl {
+    constructor() {
+        super();
+        this.formatter(json_formatter_default_1.DateJSONFormatter);
+        this.formatter(json_formatter_default_1.ErrorJSONFormatter);
+        this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
+        this.formatter(json_formatter_default_1.BufferJSONFormatter);
+    }
+}
+exports.JSONParserV1 = new JSONParserV1Impl();
+exports.JSONParser = exports.JSONParserV1;
+
+},{"./json-formatter-default":1,"./json-parser-impl":2}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.JSONParserV2 = void 0;
+const json_formatter_default_1 = require("./json-formatter-default");
+const json_parser_impl_1 = require("./json-parser-impl");
+class JSONParserV2Impl extends json_parser_impl_1.JSONParserImpl {
+    constructor() {
+        super();
+        this.formatter(json_formatter_default_1.DateJSONFormatter);
+        this.formatter(json_formatter_default_1.ErrorJSONFormatter);
+        this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
+        this.formatter(json_formatter_default_1.BufferBinaryJSONFormatter);
+    }
+}
+exports.JSONParserV2 = new JSONParserV2Impl();
+
+},{"./json-formatter-default":1,"./json-parser-impl":2}],5:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ToJSONConstants = void 0;
+var ToJSONConstants;
+(function (ToJSONConstants) {
+    ToJSONConstants.JSON_TOKEN_UNDEFINED = '_/undefined/_';
+})(ToJSONConstants = exports.ToJSONConstants || (exports.ToJSONConstants = {}));
+
+},{}],6:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.JSONReplacerImpl = void 0;
 const json_parser_1 = require("./json-parser");
-const json_formatter_setup_1 = require("./json-formatter-setup");
 class JSONReplacerImpl {
     constructor() {
         this._jsonReplacerSetupsMap = new Map();
@@ -48,8 +121,13 @@ class JSONReplacerImpl {
         this._replacer = this._replacer.bind(this);
     }
     replacer(replacer) {
-        const setup = new json_formatter_setup_1.JSONReplacerSetup(replacer);
-        this._jsonReplacerSetupsMap.set(replacer.objectType, setup);
+        const setup = new JSONReplacerSetup(replacer);
+        if (replacer.serialize) {
+            this._jsonReplacerSetupsMap.set(setup.toJSONPrototype, setup);
+        }
+        else {
+            this._jsonReplacerSetupsMap.delete(setup.toJSONPrototype);
+        }
     }
     _replacer(key, value) {
         if (typeof key === 'undefined') {
@@ -92,13 +170,89 @@ class JSONReplacerImpl {
     }
 }
 exports.JSONReplacerImpl = JSONReplacerImpl;
+class JSONReplacerSetup {
+    constructor(replacer) {
+        this.objectType = replacer.objectType;
+        this.objectConstructor = replacer.objectConstructor;
+        this.serialize = replacer.serialize;
+        const objectConstructor = this.objectConstructor;
+        if (!this.findFunction(objectConstructor, 'toJSON') && !this.findFunction(objectConstructor, 'toString')) {
+            this.toJSONPrototype = objectConstructor.prototype;
+            this._toJSONDescriptor = {
+                value: function () {
+                    return this.toString();
+                },
+                configurable: true,
+                enumerable: false,
+                writable: true
+            };
+        }
+    }
+    findFunction(objectConstructor, name) {
+        let proto = objectConstructor.prototype;
+        this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
+        if (this._toJSONDescriptor) {
+            this.toJSONPrototype = proto;
+            return true;
+        }
+        else {
+            proto = Object.getPrototypeOf(objectConstructor);
+            while (proto) {
+                this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
+                if (this._toJSONDescriptor) {
+                    this.toJSONPrototype = proto;
+                    return true;
+                }
+                proto = Object.getPrototypeOf(proto);
+            }
+        }
+        return false;
+    }
+    install() {
+        if (this.toJSONPrototype) {
+            try {
+                const self = this;
+                Object.defineProperty(this.toJSONPrototype, 'toJSON', {
+                    value: function () {
+                        return { type: self.objectType, data: self.serialize(this) };
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            catch (err) {
+            }
+        }
+    }
+    uninstall() {
+        if (this.toJSONPrototype) {
+            try {
+                Object.defineProperty(this.toJSONPrototype, 'toJSON', this._toJSONDescriptor);
+            }
+            catch (err) {
+            }
+        }
+    }
+}
+
+},{"./json-parser":5}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.JSONReviverImpl = void 0;
+const json_parser_1 = require("./json-parser");
 class JSONReviverImpl {
     constructor() {
         this._jsonReviversMap = new Map();
         this._reviver = this._reviver.bind(this);
     }
     reviver(reviver) {
-        this._jsonReviversMap.set(reviver.objectType, reviver);
+        if (reviver.unserialize) {
+            this._jsonReviversMap.set(reviver.objectType, reviver);
+        }
+        else {
+            this._jsonReviversMap.delete(reviver.objectType);
+        }
     }
     _reviver(key, value) {
         if (value) {
@@ -135,156 +289,7 @@ class JSONReviverImpl {
 }
 exports.JSONReviverImpl = JSONReviverImpl;
 
-},{"./json-formatter-setup":3,"./json-parser":6}],3:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONReplacerSetup = void 0;
-class JSONReplacerSetup {
-    constructor(replacer) {
-        this._jsonReplacer = replacer;
-        const objectConstructor = replacer.objectInstance.constructor;
-        this.objectType = replacer.objectType || objectConstructor.name;
-        this.serialize = this._jsonReplacer.serialize;
-        if (this.serialize && !this.findFunction(objectConstructor, 'toJSON') && !this.findFunction(objectConstructor, 'toString')) {
-            this._toJSONPrototype = objectConstructor.prototype;
-            this._toJSONDescriptor = {
-                value: function () {
-                    return this.toString();
-                },
-                configurable: true,
-                enumerable: false,
-                writable: true
-            };
-        }
-    }
-    findFunction(objectConstructor, name) {
-        let proto = objectConstructor.prototype;
-        this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
-        if (this._toJSONDescriptor) {
-            this._toJSONPrototype = proto;
-            return true;
-        }
-        else {
-            proto = Object.getPrototypeOf(objectConstructor);
-            while (proto) {
-                this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
-                if (this._toJSONDescriptor) {
-                    this._toJSONPrototype = proto;
-                    return true;
-                }
-                proto = Object.getPrototypeOf(proto);
-            }
-        }
-        return false;
-    }
-    install() {
-        if (this._toJSONPrototype) {
-            try {
-                const self = this;
-                Object.defineProperty(this._toJSONPrototype, 'toJSON', {
-                    value: function () {
-                        return { type: self.objectType, data: self.serialize(this) };
-                    },
-                    configurable: true,
-                    enumerable: false,
-                    writable: true
-                });
-            }
-            catch (err) {
-            }
-        }
-    }
-    uninstall() {
-        if (this._toJSONPrototype) {
-            try {
-                Object.defineProperty(this._toJSONPrototype, 'toJSON', this._toJSONDescriptor);
-            }
-            catch (err) {
-            }
-        }
-    }
-}
-exports.JSONReplacerSetup = JSONReplacerSetup;
-
-},{}],4:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONParser = exports.JSONParserV1 = void 0;
-const json_formatter_impl_1 = require("./json-formatter-impl");
-const json_formatter_default_1 = require("./json-formatter-default");
-class JSONParserV1Impl {
-    constructor() {
-        this._jsonReplacer = new json_formatter_impl_1.JSONReplacerImpl();
-        this._jsonReviver = new json_formatter_impl_1.JSONReviverImpl();
-        this.formatter(json_formatter_default_1.DateJSONFormatter);
-        this.formatter(json_formatter_default_1.ErrorJSONFormatter);
-        this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
-        this.formatter(json_formatter_default_1.BufferJSONFormatter);
-    }
-    reviver(reviver) {
-        this._jsonReviver.reviver(reviver);
-    }
-    replacer(replacer) {
-        this._jsonReplacer.replacer(replacer);
-    }
-    formatter(jsonFormatter) {
-        this._jsonReplacer.replacer(jsonFormatter);
-        this._jsonReviver.reviver(jsonFormatter);
-    }
-    stringify(value, replacer, space) {
-        return this._jsonReplacer.stringify(value, replacer, space);
-    }
-    parse(text, reviver) {
-        return this._jsonReviver.parse(text, reviver);
-    }
-}
-exports.JSONParserV1 = new JSONParserV1Impl();
-exports.JSONParser = exports.JSONParserV1;
-
-},{"./json-formatter-default":1,"./json-formatter-impl":2}],5:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONParserV2 = void 0;
-const json_formatter_impl_1 = require("./json-formatter-impl");
-const json_formatter_default_1 = require("./json-formatter-default");
-class JSONParserV2Impl {
-    constructor() {
-        this._jsonReplacer = new json_formatter_impl_1.JSONReplacerImpl();
-        this._jsonReviver = new json_formatter_impl_1.JSONReviverImpl();
-        this.formatter(json_formatter_default_1.DateJSONFormatter);
-        this.formatter(json_formatter_default_1.ErrorJSONFormatter);
-        this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
-        this.formatter(json_formatter_default_1.BufferBinaryJSONFormatter);
-    }
-    reviver(reviver) {
-        this._jsonReviver.reviver(reviver);
-    }
-    replacer(replacer) {
-        this._jsonReplacer.replacer(replacer);
-    }
-    formatter(jsonFormatter) {
-        this._jsonReplacer.replacer(jsonFormatter);
-        this._jsonReviver.reviver(jsonFormatter);
-    }
-    stringify(value, replacer, space) {
-        return this._jsonReplacer.stringify(value, replacer, space);
-    }
-    parse(text, reviver) {
-        return this._jsonReviver.parse(text, reviver);
-    }
-}
-exports.JSONParserV2 = new JSONParserV2Impl();
-
-},{"./json-formatter-default":1,"./json-formatter-impl":2}],6:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ToJSONConstants = void 0;
-var ToJSONConstants;
-(function (ToJSONConstants) {
-    ToJSONConstants.JSON_TOKEN_UNDEFINED = '_/undefined/_';
-})(ToJSONConstants = exports.ToJSONConstants || (exports.ToJSONConstants = {}));
-
-},{}],7:[function(require,module,exports){
+},{"./json-parser":5}],8:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -299,7 +304,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./json-helpers-common"), exports);
 
-},{"./json-helpers-common":8}],8:[function(require,module,exports){
+},{"./json-helpers-common":9}],9:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -315,7 +320,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./code/json-parser-v1"), exports);
 __exportStar(require("./code/json-parser-v2"), exports);
 
-},{"./code/json-parser-v1":4,"./code/json-parser-v2":5}],9:[function(require,module,exports){
+},{"./code/json-parser-v1":3,"./code/json-parser-v2":4}],10:[function(require,module,exports){
 /*!
  * assertion-error
  * Copyright(c) 2013 Jake Luer <jake@qualiancy.com>
@@ -433,7 +438,7 @@ AssertionError.prototype.toJSON = function (stack) {
   return props;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -585,7 +590,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -2366,10 +2371,10 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":10,"buffer":11,"ieee754":47}],12:[function(require,module,exports){
+},{"base64-js":11,"buffer":12,"ieee754":48}],13:[function(require,module,exports){
 module.exports = require('./lib/chai');
 
-},{"./lib/chai":13}],13:[function(require,module,exports){
+},{"./lib/chai":14}],14:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -2463,7 +2468,7 @@ exports.use(should);
 var assert = require('./chai/interface/assert');
 exports.use(assert);
 
-},{"./chai/assertion":14,"./chai/config":15,"./chai/core/assertions":16,"./chai/interface/assert":17,"./chai/interface/expect":18,"./chai/interface/should":19,"./chai/utils":33,"assertion-error":9}],14:[function(require,module,exports){
+},{"./chai/assertion":15,"./chai/config":16,"./chai/core/assertions":17,"./chai/interface/assert":18,"./chai/interface/expect":19,"./chai/interface/should":20,"./chai/utils":34,"assertion-error":10}],15:[function(require,module,exports){
 /*!
  * chai
  * http://chaijs.com
@@ -2630,7 +2635,7 @@ module.exports = function (_chai, util) {
   });
 };
 
-},{"./config":15}],15:[function(require,module,exports){
+},{"./config":16}],16:[function(require,module,exports){
 module.exports = {
 
   /**
@@ -2726,7 +2731,7 @@ module.exports = {
   proxyExcludedKeys: ['then', 'catch', 'inspect', 'toJSON']
 };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*!
  * chai
  * http://chaijs.com
@@ -6532,7 +6537,7 @@ module.exports = function (chai, _) {
   });
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -9647,7 +9652,7 @@ module.exports = function (chai, util) {
   ('isNotEmpty', 'notEmpty');
 };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -9696,7 +9701,7 @@ module.exports = function (chai, util) {
   };
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -9916,7 +9921,7 @@ module.exports = function (chai, util) {
   chai.Should = loadShould;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /*!
  * Chai - addChainingMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10070,7 +10075,7 @@ module.exports = function addChainableMethod(ctx, name, method, chainingBehavior
   });
 };
 
-},{"../../chai":13,"./addLengthGuard":21,"./flag":26,"./proxify":41,"./transferFlags":43}],21:[function(require,module,exports){
+},{"../../chai":14,"./addLengthGuard":22,"./flag":27,"./proxify":42,"./transferFlags":44}],22:[function(require,module,exports){
 var fnLengthDesc = Object.getOwnPropertyDescriptor(function () {}, 'length');
 
 /*!
@@ -10132,7 +10137,7 @@ module.exports = function addLengthGuard (fn, assertionName, isChainable) {
   return fn;
 };
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /*!
  * Chai - addMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10202,7 +10207,7 @@ module.exports = function addMethod(ctx, name, method) {
   ctx[name] = proxify(methodWrapper, name);
 };
 
-},{"../../chai":13,"./addLengthGuard":21,"./flag":26,"./proxify":41,"./transferFlags":43}],23:[function(require,module,exports){
+},{"../../chai":14,"./addLengthGuard":22,"./flag":27,"./proxify":42,"./transferFlags":44}],24:[function(require,module,exports){
 /*!
  * Chai - addProperty utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10276,7 +10281,7 @@ module.exports = function addProperty(ctx, name, getter) {
   });
 };
 
-},{"../../chai":13,"./flag":26,"./isProxyEnabled":36,"./transferFlags":43}],24:[function(require,module,exports){
+},{"../../chai":14,"./flag":27,"./isProxyEnabled":37,"./transferFlags":44}],25:[function(require,module,exports){
 /*!
  * Chai - compareByInspect utility
  * Copyright(c) 2011-2016 Jake Luer <jake@alogicalparadox.com>
@@ -10309,7 +10314,7 @@ module.exports = function compareByInspect(a, b) {
   return inspect(a) < inspect(b) ? -1 : 1;
 };
 
-},{"./inspect":34}],25:[function(require,module,exports){
+},{"./inspect":35}],26:[function(require,module,exports){
 /*!
  * Chai - expectTypes utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10362,7 +10367,7 @@ module.exports = function expectTypes(obj, types) {
   }
 };
 
-},{"./flag":26,"assertion-error":9,"type-detect":49}],26:[function(require,module,exports){
+},{"./flag":27,"assertion-error":10,"type-detect":50}],27:[function(require,module,exports){
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10397,7 +10402,7 @@ module.exports = function flag(obj, key, value) {
   }
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * Chai - getActual utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10419,7 +10424,7 @@ module.exports = function getActual(obj, args) {
   return args.length > 4 ? args[4] : obj._obj;
 };
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*!
  * Chai - getEnumerableProperties utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10447,7 +10452,7 @@ module.exports = function getEnumerableProperties(object) {
   return result;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /*!
  * Chai - message composition utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10499,7 +10504,7 @@ module.exports = function getMessage(obj, args) {
   return flagMsg ? flagMsg + ': ' + msg : msg;
 };
 
-},{"./flag":26,"./getActual":27,"./objDisplay":37}],30:[function(require,module,exports){
+},{"./flag":27,"./getActual":28,"./objDisplay":38}],31:[function(require,module,exports){
 /*!
  * Chai - getOwnEnumerableProperties utility
  * Copyright(c) 2011-2016 Jake Luer <jake@alogicalparadox.com>
@@ -10530,7 +10535,7 @@ module.exports = function getOwnEnumerableProperties(obj) {
   return Object.keys(obj).concat(getOwnEnumerablePropertySymbols(obj));
 };
 
-},{"./getOwnEnumerablePropertySymbols":31}],31:[function(require,module,exports){
+},{"./getOwnEnumerablePropertySymbols":32}],32:[function(require,module,exports){
 /*!
  * Chai - getOwnEnumerablePropertySymbols utility
  * Copyright(c) 2011-2016 Jake Luer <jake@alogicalparadox.com>
@@ -10559,7 +10564,7 @@ module.exports = function getOwnEnumerablePropertySymbols(obj) {
   });
 };
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * Chai - getProperties utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10597,7 +10602,7 @@ module.exports = function getProperties(object) {
   return result;
 };
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
@@ -10771,7 +10776,7 @@ exports.isProxyEnabled = require('./isProxyEnabled');
 
 exports.isNaN = require('./isNaN');
 
-},{"./addChainableMethod":20,"./addLengthGuard":21,"./addMethod":22,"./addProperty":23,"./compareByInspect":24,"./expectTypes":25,"./flag":26,"./getActual":27,"./getMessage":29,"./getOwnEnumerableProperties":30,"./getOwnEnumerablePropertySymbols":31,"./inspect":34,"./isNaN":35,"./isProxyEnabled":36,"./objDisplay":37,"./overwriteChainableMethod":38,"./overwriteMethod":39,"./overwriteProperty":40,"./proxify":41,"./test":42,"./transferFlags":43,"check-error":44,"deep-eql":45,"get-func-name":46,"pathval":48,"type-detect":49}],34:[function(require,module,exports){
+},{"./addChainableMethod":21,"./addLengthGuard":22,"./addMethod":23,"./addProperty":24,"./compareByInspect":25,"./expectTypes":26,"./flag":27,"./getActual":28,"./getMessage":30,"./getOwnEnumerableProperties":31,"./getOwnEnumerablePropertySymbols":32,"./inspect":35,"./isNaN":36,"./isProxyEnabled":37,"./objDisplay":38,"./overwriteChainableMethod":39,"./overwriteMethod":40,"./overwriteProperty":41,"./proxify":42,"./test":43,"./transferFlags":44,"check-error":45,"deep-eql":46,"get-func-name":47,"pathval":49,"type-detect":50}],35:[function(require,module,exports){
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
@@ -11149,7 +11154,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
-},{"../config":15,"./getEnumerableProperties":28,"./getProperties":32,"get-func-name":46}],35:[function(require,module,exports){
+},{"../config":16,"./getEnumerableProperties":29,"./getProperties":33,"get-func-name":47}],36:[function(require,module,exports){
 /*!
  * Chai - isNaN utility
  * Copyright(c) 2012-2015 Sakthipriyan Vairamani <thechargingvolcano@gmail.com>
@@ -11177,7 +11182,7 @@ function isNaN(value) {
 // If ECMAScript 6's Number.isNaN is present, prefer that.
 module.exports = Number.isNaN || isNaN;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 var config = require('../config');
 
 /*!
@@ -11203,7 +11208,7 @@ module.exports = function isProxyEnabled() {
     typeof Reflect !== 'undefined';
 };
 
-},{"../config":15}],37:[function(require,module,exports){
+},{"../config":16}],38:[function(require,module,exports){
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11255,7 +11260,7 @@ module.exports = function objDisplay(obj) {
   }
 };
 
-},{"../config":15,"./inspect":34}],38:[function(require,module,exports){
+},{"../config":16,"./inspect":35}],39:[function(require,module,exports){
 /*!
  * Chai - overwriteChainableMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11326,7 +11331,7 @@ module.exports = function overwriteChainableMethod(ctx, name, method, chainingBe
   };
 };
 
-},{"../../chai":13,"./transferFlags":43}],39:[function(require,module,exports){
+},{"../../chai":14,"./transferFlags":44}],40:[function(require,module,exports){
 /*!
  * Chai - overwriteMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11420,7 +11425,7 @@ module.exports = function overwriteMethod(ctx, name, method) {
   ctx[name] = proxify(overwritingMethodWrapper, name);
 };
 
-},{"../../chai":13,"./addLengthGuard":21,"./flag":26,"./proxify":41,"./transferFlags":43}],40:[function(require,module,exports){
+},{"../../chai":14,"./addLengthGuard":22,"./flag":27,"./proxify":42,"./transferFlags":44}],41:[function(require,module,exports){
 /*!
  * Chai - overwriteProperty utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11514,7 +11519,7 @@ module.exports = function overwriteProperty(ctx, name, getter) {
   });
 };
 
-},{"../../chai":13,"./flag":26,"./isProxyEnabled":36,"./transferFlags":43}],41:[function(require,module,exports){
+},{"../../chai":14,"./flag":27,"./isProxyEnabled":37,"./transferFlags":44}],42:[function(require,module,exports){
 var config = require('../config');
 var flag = require('./flag');
 var getProperties = require('./getProperties');
@@ -11663,7 +11668,7 @@ function stringDistanceCapped(strA, strB, cap) {
   return memo[strA.length][strB.length];
 }
 
-},{"../config":15,"./flag":26,"./getProperties":32,"./isProxyEnabled":36}],42:[function(require,module,exports){
+},{"../config":16,"./flag":27,"./getProperties":33,"./isProxyEnabled":37}],43:[function(require,module,exports){
 /*!
  * Chai - test utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11693,7 +11698,7 @@ module.exports = function test(obj, args) {
   return negate ? !expr : expr;
 };
 
-},{"./flag":26}],43:[function(require,module,exports){
+},{"./flag":27}],44:[function(require,module,exports){
 /*!
  * Chai - transferFlags utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11740,7 +11745,7 @@ module.exports = function transferFlags(assertion, object, includeAll) {
   }
 };
 
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict';
 
 /* !
@@ -11914,7 +11919,7 @@ module.exports = {
   getConstructorName: getConstructorName,
 };
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 /* globals Symbol: false, Uint8Array: false, WeakMap: false */
 /*!
@@ -12371,7 +12376,7 @@ function isPrimitive(value) {
   return value === null || typeof value !== 'object';
 }
 
-},{"type-detect":49}],46:[function(require,module,exports){
+},{"type-detect":50}],47:[function(require,module,exports){
 'use strict';
 
 /* !
@@ -12417,7 +12422,7 @@ function getFuncName(aFunc) {
 
 module.exports = getFuncName;
 
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -12504,7 +12509,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 
 /* !
@@ -12797,7 +12802,7 @@ module.exports = {
   setPathValue: setPathValue,
 };
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 (function (global){(function (){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -13189,7 +13194,7 @@ return typeDetect;
 })));
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 module.exports=[
   {
     "_id": "5bf07ca4d97a2ccdd9a83feb",
@@ -21742,16 +21747,16 @@ module.exports=[
     "favoriteFruit": "banana"
   }
 ]
-},{}],51:[function(require,module,exports){
-require('../json-parser-basic.test');
-// require('../json-parser.test');
-},{"../json-parser-basic.test":52}],52:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
+require('../json-parser.test');
+
+},{"../json-parser.test":53}],53:[function(require,module,exports){
 (function (Buffer){(function (){
 const chai = require('chai');
 const assert = chai.assert;
 const expect = chai.expect;
 
-const json_tools = require('../');
+const json_tools = require('../lib/json-helpers');
 
 function ObjectEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);
@@ -21901,4 +21906,4 @@ describe('JSONParser', () => {
 //   });
 // });
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../":7,"./big-data.json":50,"buffer":11,"chai":12}]},{},[51]);
+},{"../lib/json-helpers":8,"./big-data.json":51,"buffer":12,"chai":13}]},{},[52]);

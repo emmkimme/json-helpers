@@ -1,5 +1,6 @@
 # json-helpers
 Provide a new stringify/parser able to manage 'undefined', Date object and Buffer object.
+You can add your own class formatter.
 
 
 # Installation
@@ -44,10 +45,11 @@ const mirror_busEvent = json_tools.JSONParserV1.parse(resultStringify);
 json_tools.JSONParserV2 is far more efficient for buffer serialization (x10 faster) but it overrides the default Buffer.toJSON function
 So may break some compatibility
 
-You can add your own formatter, calling setup()
+You can add your own formatter, calling formatter()
 
 ```ts
 const DateJSONFormatter: JSONFormatter<Date> = {
+    objectType: 'MyDate',
     objectConstructor: (Date as unknown) as ObjectConstructor, 
     serialize: (t: Date) => t.toISOString(), 
     unserialize: (data: string) => new Date(data)

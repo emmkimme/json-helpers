@@ -2,7 +2,7 @@ const chai = require('chai');
 const assert = chai.assert;
 const expect = chai.expect;
 
-const json_tools = require('../');
+const json_tools = require('../lib/json-helpers');
 
 function ObjectEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);

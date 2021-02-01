@@ -8,8 +8,8 @@ export interface JSONReviverData<T> {
 export interface JSONReplacerData<T> {
     objectType: string;
     // serialize data
-    objectInstance: T;
-    // objectConstructor: ObjectConstructor,
+    // objectInstance: T;
+    objectConstructor: ObjectConstructor,
     serialize: (t: T) => any;
 }
 

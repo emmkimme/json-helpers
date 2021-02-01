@@ -1,6 +1,6 @@
 {
   "name": "json-helpers",
-  "version": "4.0.1",
+  "version": "5.0.0",
   "description": "JSON stringify/parser managing 'undefined, Date and Buffer.",
   "repository": {
     "type": "git",
@@ -12,6 +12,8 @@
     "serializer",
     "deserialize",
     "deserializer",
+    "reviver",
+    "replacer",
     "parse",
     "parser",
     "node",
