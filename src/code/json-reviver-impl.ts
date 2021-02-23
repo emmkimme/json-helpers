@@ -28,7 +28,7 @@ export class JSONReviverImpl implements JSONReviver {
                 return undefined;
             }
             // Is it JSONFormatter ? - duck typing
-            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+            if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
                 if (format) {
                     return format.unserialize(value.data);
@@ -44,7 +44,7 @@ export class JSONReviverImpl implements JSONReviver {
                 return undefined;
             }
             // Is it JSONFormatter ? - duck typing
-            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+            if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
                 if (format) {
                     return format.unserialize(value.data);

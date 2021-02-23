@@ -1,6 +1,9 @@
 # json-helpers
-Provide a new stringify/parser able to manage 'undefined', Date object and Buffer object.
+Provide a JSON stringify/parser able to manage 'undefined', 'Date', 'Uint8Array' and 'Buffer'.
 You can add your own class formatter.
+
+This parser is pretty efficient as using the standard JSON implementation, just overriding the 'toJSON' methods of classes.  
+To keep original implementations untouched, these overriding/s are done before stringify is called and restore after. If you want to save performance, you can call 'install()' method to setup redirections once and for all.
 
 
 # Installation
@@ -37,14 +40,19 @@ const busEvent = {
       }
 };
 
+// Date, Buffer, Error are properly restored
 const resultStringify = json_tools.JSONParserV1.stringify(busEvent);
 const mirror_busEvent = json_tools.JSONParserV1.parse(resultStringify);
-// Date, Buffer, Error are properly restored
+
+// Setup 'toJSON' functions
+json_tools.JSONParserV1.install();
+
 ```
 
 json_tools.JSONParserV2 is far more efficient for buffer serialization (x10 faster) but it overrides the default Buffer.toJSON function
 So may break some compatibility
 
+# Formatter
 You can add your own formatter, calling formatter()
 
 ```ts

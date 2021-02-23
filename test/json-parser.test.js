@@ -29,7 +29,7 @@ function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
   }
   TestParser(json_tools.JSONParserV1);
   TestParser(json_tools.JSONParserV2);
-  TestParser(JSON);
+  // TestParser(JSON);
 }
 
 function TestTypeOf(myValue, nameTypeOf, compare) {
@@ -84,9 +84,15 @@ const complexJSON = {
   }
 };
 
+const uint8Array = new Uint8Array([1,2,3,4,5]);
+
 describe('JSONParser', () => {
   describe('buffer json', () => {
     TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+  });
+
+  describe('Uint8Array json', () => {
+    TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.toString() === r2.toString());
   });
 
   describe('Date json', () => {

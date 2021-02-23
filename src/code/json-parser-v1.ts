@@ -1,4 +1,4 @@
-import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJSONFormatter } from './json-formatter-default';
+import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJSONFormatter, Uint8ArrayJSONFormatter } from './json-formatter-default';
 import { JSONParserImpl } from './json-parser-impl';
 import type { JSONParserInterface } from './json-parser';
 
@@ -11,6 +11,7 @@ class JSONParserV1Impl extends JSONParserImpl {
         this.formatter<Error>(ErrorJSONFormatter);
         this.formatter<TypeError>(TypeErrorJSONFormatter);
         this.formatter<Buffer>(BufferJSONFormatter);
+        this.formatter<Uint8Array>(Uint8ArrayJSONFormatter);
     }
 }
 

@@ -26,6 +26,14 @@ export class JSONParserImpl implements JSONParserInterface {
         this._jsonReviver.reviver(jsonFormatter);
     }
 
+    install(): void {
+        this._jsonReplacer.install();
+    }
+
+    uninstall(): void {
+        this._jsonReplacer.uninstall();
+    }
+
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         return this._jsonReplacer.stringify(value, replacer, space);
     }

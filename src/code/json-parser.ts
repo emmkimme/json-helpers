@@ -16,4 +16,6 @@ export interface JSONReviver {
 
 export interface JSONParserInterface extends JSONReplacer, JSONReviver {
     formatter<T>(jsonFormatter: JSONFormatterData<T>): void;
+    install(): void;
+    uninstall(): void;
 }

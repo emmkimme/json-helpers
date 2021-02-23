@@ -2,22 +2,22 @@
 (function (Buffer){(function (){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BufferBinaryJSONFormatter = exports.BufferJSONFormatter = exports.TypeErrorJSONFormatter = exports.ErrorJSONFormatter = exports.DateJSONFormatter = void 0;
+exports.Uint8ArrayJSONFormatter = exports.BufferBinaryJSONFormatter = exports.BufferJSONFormatter = exports.TypeErrorJSONFormatter = exports.ErrorJSONFormatter = exports.DateJSONFormatter = void 0;
 exports.DateJSONFormatter = {
     objectType: 'Date',
-    objectConstructor: Date,
+    objectConstructor: globalThis.Date,
     serialize: (t) => t.valueOf(),
     unserialize: (data) => new Date(data)
 };
 exports.ErrorJSONFormatter = {
     objectType: 'Error',
-    objectConstructor: Error,
+    objectConstructor: globalThis.Error,
     serialize: (t) => t.message,
     unserialize: (data) => new Error(data)
 };
 exports.TypeErrorJSONFormatter = {
     objectType: 'TypeError',
-    objectConstructor: TypeError,
+    objectConstructor: globalThis.TypeError,
     serialize: (t) => t.message,
     unserialize: (data) => new TypeError(data)
 };
@@ -32,6 +32,15 @@ exports.BufferBinaryJSONFormatter = {
     objectConstructor: Buffer,
     serialize: (t) => t.toString('binary'),
     unserialize: (data) => Buffer.from(data, 'binary')
+};
+exports.Uint8ArrayJSONFormatter = {
+    objectType: 'Uint8Array',
+    objectConstructor: Uint8Array,
+    serialize: (t) => Buffer.from(t.buffer).toString('binary'),
+    unserialize: (data) => {
+        const buffer = Buffer.from(data, 'binary');
+        return new Uint8Array(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
+    }
 };
 
 }).call(this)}).call(this,require("buffer").Buffer)
@@ -56,6 +65,12 @@ class JSONParserImpl {
         this._jsonReplacer.replacer(jsonFormatter);
         this._jsonReviver.reviver(jsonFormatter);
     }
+    install() {
+        this._jsonReplacer.install();
+    }
+    uninstall() {
+        this._jsonReplacer.uninstall();
+    }
     stringify(value, replacer, space) {
         return this._jsonReplacer.stringify(value, replacer, space);
     }
@@ -78,6 +93,7 @@ class JSONParserV1Impl extends json_parser_impl_1.JSONParserImpl {
         this.formatter(json_formatter_default_1.ErrorJSONFormatter);
         this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
         this.formatter(json_formatter_default_1.BufferJSONFormatter);
+        this.formatter(json_formatter_default_1.Uint8ArrayJSONFormatter);
     }
 }
 exports.JSONParserV1 = new JSONParserV1Impl();
@@ -96,6 +112,7 @@ class JSONParserV2Impl extends json_parser_impl_1.JSONParserImpl {
         this.formatter(json_formatter_default_1.ErrorJSONFormatter);
         this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
         this.formatter(json_formatter_default_1.BufferBinaryJSONFormatter);
+        this.formatter(json_formatter_default_1.Uint8ArrayJSONFormatter);
     }
 }
 exports.JSONParserV2 = new JSONParserV2Impl();
@@ -114,6 +131,78 @@ var ToJSONConstants;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReplacerImpl = void 0;
 const json_parser_1 = require("./json-parser");
+function findFunctionPrototype(objectConstructor, name) {
+    let proto = objectConstructor.prototype;
+    let toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
+    if (toJSONDescriptor) {
+        return [proto, toJSONDescriptor];
+    }
+    else {
+        proto = Object.getPrototypeOf(objectConstructor);
+        while (proto) {
+            toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
+            if (toJSONDescriptor) {
+                return [proto, toJSONDescriptor];
+            }
+            proto = Object.getPrototypeOf(proto);
+        }
+    }
+    return null;
+}
+class JSONReplacerSetup {
+    constructor(replacer) {
+        this.objectType = replacer.objectType;
+        this.objectConstructor = replacer.objectConstructor;
+        this.serialize = replacer.serialize;
+        const objectConstructor = this.objectConstructor;
+        this._toOriginalDescriptor = findFunctionPrototype(objectConstructor, 'toJSON');
+        if (this._toOriginalDescriptor == null) {
+            this.toJSONPrototype = objectConstructor.prototype;
+            this._toOriginalDescriptor = findFunctionPrototype(objectConstructor, 'toString');
+            if (this._toOriginalDescriptor == null) {
+                this._toOriginalDescriptor[0] = objectConstructor.prototype;
+                this._toOriginalDescriptor[1] = {
+                    value: function () {
+                        return this.toString();
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                };
+            }
+        }
+        else {
+            this.toJSONPrototype = this._toOriginalDescriptor[0];
+        }
+    }
+    install() {
+        if (this.toJSONPrototype) {
+            try {
+                const self = this;
+                Object.defineProperty(this.toJSONPrototype, 'toJSON', {
+                    value: function () {
+                        return { type: self.objectType, data: self.serialize(this) };
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            catch (err) {
+                console.error(`${err}`);
+            }
+        }
+    }
+    uninstall() {
+        if (this.toJSONPrototype) {
+            try {
+                Object.defineProperty(this._toOriginalDescriptor[0], 'toJSON', this._toOriginalDescriptor[1]);
+            }
+            catch (err) {
+            }
+        }
+    }
+}
 class JSONReplacerImpl {
     constructor() {
         this._jsonReplacerSetupsMap = new Map();
@@ -170,71 +259,6 @@ class JSONReplacerImpl {
     }
 }
 exports.JSONReplacerImpl = JSONReplacerImpl;
-class JSONReplacerSetup {
-    constructor(replacer) {
-        this.objectType = replacer.objectType;
-        this.objectConstructor = replacer.objectConstructor;
-        this.serialize = replacer.serialize;
-        const objectConstructor = this.objectConstructor;
-        if (!this.findFunction(objectConstructor, 'toJSON') && !this.findFunction(objectConstructor, 'toString')) {
-            this.toJSONPrototype = objectConstructor.prototype;
-            this._toJSONDescriptor = {
-                value: function () {
-                    return this.toString();
-                },
-                configurable: true,
-                enumerable: false,
-                writable: true
-            };
-        }
-    }
-    findFunction(objectConstructor, name) {
-        let proto = objectConstructor.prototype;
-        this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
-        if (this._toJSONDescriptor) {
-            this.toJSONPrototype = proto;
-            return true;
-        }
-        else {
-            proto = Object.getPrototypeOf(objectConstructor);
-            while (proto) {
-                this._toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
-                if (this._toJSONDescriptor) {
-                    this.toJSONPrototype = proto;
-                    return true;
-                }
-                proto = Object.getPrototypeOf(proto);
-            }
-        }
-        return false;
-    }
-    install() {
-        if (this.toJSONPrototype) {
-            try {
-                const self = this;
-                Object.defineProperty(this.toJSONPrototype, 'toJSON', {
-                    value: function () {
-                        return { type: self.objectType, data: self.serialize(this) };
-                    },
-                    configurable: true,
-                    enumerable: false,
-                    writable: true
-                });
-            }
-            catch (err) {
-            }
-        }
-    }
-    uninstall() {
-        if (this.toJSONPrototype) {
-            try {
-                Object.defineProperty(this.toJSONPrototype, 'toJSON', this._toJSONDescriptor);
-            }
-            catch (err) {
-            }
-        }
-    }
-}
 
 },{"./json-parser":5}],7:[function(require,module,exports){
 "use strict";
@@ -259,7 +283,7 @@ class JSONReviverImpl {
             if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
-            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+            if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
                 if (format) {
                     return format.unserialize(value.data);
@@ -273,7 +297,7 @@ class JSONReviverImpl {
             if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
                 return undefined;
             }
-            if ((typeof value.type === 'string') && value.hasOwnProperty('data')) {
+            if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
                 if (format) {
                     return format.unserialize(value.data);
@@ -21783,7 +21807,7 @@ function TestPerformanceTypeOf(myValue, nameTypeOf, compare) {
   }
   TestParser(json_tools.JSONParserV1);
   TestParser(json_tools.JSONParserV2);
-  TestParser(JSON);
+  // TestParser(JSON);
 }
 
 function TestTypeOf(myValue, nameTypeOf, compare) {
@@ -21838,9 +21862,15 @@ const complexJSON = {
   }
 };
 
+const uint8Array = new Uint8Array([1,2,3,4,5]);
+
 describe('JSONParser', () => {
   describe('buffer json', () => {
     TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+  });
+
+  describe('Uint8Array json', () => {
+    TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.toString() === r2.toString());
   });
 
   describe('Date json', () => {
