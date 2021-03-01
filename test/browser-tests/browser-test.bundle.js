@@ -120,11 +120,15 @@ exports.JSONParserV2 = new JSONParserV2Impl();
 },{"./json-formatter-default":1,"./json-parser-impl":2}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ToJSONConstants = void 0;
+exports.IsJSONLike = exports.ToJSONConstants = void 0;
 var ToJSONConstants;
 (function (ToJSONConstants) {
     ToJSONConstants.JSON_TOKEN_UNDEFINED = '_/undefined/_';
 })(ToJSONConstants = exports.ToJSONConstants || (exports.ToJSONConstants = {}));
+function IsJSONLike(obj) {
+    return ((typeof obj === 'object') && obj.stringify && obj.parse);
+}
+exports.IsJSONLike = IsJSONLike;
 
 },{}],6:[function(require,module,exports){
 "use strict";
@@ -341,10 +345,11 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+__exportStar(require("./code/json-parser"), exports);
 __exportStar(require("./code/json-parser-v1"), exports);
 __exportStar(require("./code/json-parser-v2"), exports);
 
-},{"./code/json-parser-v1":3,"./code/json-parser-v2":4}],10:[function(require,module,exports){
+},{"./code/json-parser":5,"./code/json-parser-v1":3,"./code/json-parser-v2":4}],10:[function(require,module,exports){
 /*!
  * assertion-error
  * Copyright(c) 2013 Jake Luer <jake@qualiancy.com>
@@ -22007,6 +22012,18 @@ describe('JSONParser', () => {
 
   describe('complex json', () => {
     TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
+});
+
+describe('IsJSONLike', () => {
+  it('JSONParse1', () => {
+    assert(json_tools.IsJSONLike(json_tools.JSONParserV1));
+  });
+  it('JSONParse2', () => {
+    assert(json_tools.IsJSONLike(json_tools.JSONParserV2));
+  });
+  it('JSON', () => {
+    assert(json_tools.IsJSONLike(JSON));
   });
 });
 

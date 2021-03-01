@@ -9,6 +9,10 @@ export interface JSONLike {
     parse(text: string, reviver?: (this: any, key: string, value: any) => any): any;
 }
 
+export function IsJSONLike(obj: any): obj is JSONLike {
+    return ((typeof obj === 'object') && obj.stringify && obj.parse);
+}
+
 export interface JSONReplacer extends Pick<JSONLike, 'stringify'> {
     replacer<T>(replacer: JSONReplacerData<T>): void;
     stringify(value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;

@@ -124,6 +124,18 @@ describe('JSONParser', () => {
   });
 });
 
+describe('IsJSONLike', () => {
+  it('JSONParse1', () => {
+    assert(json_tools.IsJSONLike(json_tools.JSONParserV1));
+  });
+  it('JSONParse2', () => {
+    assert(json_tools.IsJSONLike(json_tools.JSONParserV2));
+  });
+  it('JSON', () => {
+    assert(json_tools.IsJSONLike(JSON));
+  });
+});
+
 // describe('JSONParser performance', () => {
 //   describe('buffer json', () => {
 //     TestPerformanceTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
