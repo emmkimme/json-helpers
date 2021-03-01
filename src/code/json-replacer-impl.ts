@@ -164,7 +164,7 @@ export class JSONReplacerImpl implements JSONReplacer {
         }
     }
 
-    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
+    stringify(value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string {
         try {
             this.install();
             const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;

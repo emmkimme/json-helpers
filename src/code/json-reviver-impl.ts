@@ -54,7 +54,7 @@ export class JSONReviverImpl implements JSONReviver {
         return reviver(key, value);
     }
 
-    parse(text: string, reviver?: (key: string, value: any) => any): any {
+    parse(text: string, reviver?: (this: any, key: string, value: any) => any): any {
         const reviverCb = reviver ? this._reviverChain.bind(this, reviver) : this._reviver;
         return JSON.parse(text, reviverCb);
     }
