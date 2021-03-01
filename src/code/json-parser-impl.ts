@@ -34,7 +34,7 @@ export class JSONParserImpl implements JSONParserInterface {
         this._jsonReplacer.uninstall();
     }
 
-    stringify(value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string {
+    stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         return this._jsonReplacer.stringify(value, replacer, space);
     }
 
