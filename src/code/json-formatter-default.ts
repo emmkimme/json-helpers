@@ -52,3 +52,13 @@ export const Uint8ArrayJSONFormatter: JSONFormatterData<Uint8Array> = {
         return new Uint8Array(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
     }
 };
+
+// export const Uint8ArrayJSONFormatter: JSONFormatterData<Uint8Array> = {
+//     objectType: 'Uint8Array',
+//     // objectInstance: Buffer.alloc(0),
+//     objectConstructor: (Uint8Array as unknown) as ObjectConstructor,
+//     serialize: (t: Uint8Array) => Array.apply([], this),
+//     unserialize: (data: any) => {
+//         return new Uint8Array(data);
+//     }
+// };

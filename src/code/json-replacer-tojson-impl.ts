@@ -26,10 +26,10 @@ class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
     objectType: string;
     // objectInstance: T;
     objectConstructor: ObjectConstructor;
-    serialize:(t: T) => any;
+    serialize: (t: T) => any;
     toJSONPrototype: Object;
     toStringPrototype: Object;
-    
+
     protected _toOriginalDescriptor: [any, PropertyDescriptor];
 
     constructor(replacer: JSONReplacerData<T>) {
@@ -112,7 +112,7 @@ class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
 }
 
 /** @internal */
-export class JSONReplacerImpl implements JSONReplacer {
+export class JSONReplacerToJSONImpl implements JSONReplacer {
     private _jsonReplacerSetupsMap: Map<Object, JSONReplacerSetup<any>>;
     private _installed: number;
 
@@ -147,7 +147,7 @@ export class JSONReplacerImpl implements JSONReplacer {
         }
         return replacer(key, value);
     }
-    
+
     install(): void {
         if (this._installed++ === 0) {
             this._jsonReplacerSetupsMap.forEach((item) => {
@@ -155,7 +155,7 @@ export class JSONReplacerImpl implements JSONReplacer {
             });
         }
     }
-    
+
     uninstall(): void {
         if (--this._installed === 0) {
             this._jsonReplacerSetupsMap.forEach((item) => {
