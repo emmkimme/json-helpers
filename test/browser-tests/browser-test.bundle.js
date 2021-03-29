@@ -2525,7 +2525,7 @@ var used = [];
  * Chai version
  */
 
-exports.version = '4.3.0';
+exports.version = '4.3.3';
 
 /*!
  * Assertion Error
@@ -2916,6 +2916,7 @@ module.exports = function (chai, _) {
    * - but
    * - does
    * - still
+   * - also
    *
    * @name language chains
    * @namespace BDD
@@ -2925,7 +2926,7 @@ module.exports = function (chai, _) {
   [ 'to', 'be', 'been', 'is'
   , 'and', 'has', 'have', 'with'
   , 'that', 'which', 'at', 'of'
-  , 'same', 'but', 'does', 'still' ].forEach(function (chain) {
+  , 'same', 'but', 'does', 'still', "also" ].forEach(function (chain) {
     Assertion.addProperty(chain);
   });
 
@@ -3705,19 +3706,25 @@ module.exports = function (chai, _) {
    *
    *     expect(null, 'nooo why fail??').to.exist;
    *
+   * The alias `.exists` can be used interchangeably with `.exist`.
+   *
    * @name exist
+   * @alias exists
    * @namespace BDD
    * @api public
    */
 
-  Assertion.addProperty('exist', function () {
+  function assertExist () {
     var val = flag(this, 'object');
     this.assert(
         val !== null && val !== undefined
       , 'expected #{this} to exist'
       , 'expected #{this} to not exist'
     );
-  });
+  }
+
+  Assertion.addProperty('exist', assertExist);
+  Assertion.addProperty('exists', assertExist);
 
   /**
    * ### .empty
@@ -4117,10 +4124,12 @@ module.exports = function (chai, _) {
    *     expect(1).to.be.at.least(2, 'nooo why fail??');
    *     expect(1, 'nooo why fail??').to.be.at.least(2);
    *
-   * The alias `.gte` can be used interchangeably with `.least`.
+   * The aliases `.gte` and `.greaterThanOrEqual` can be used interchangeably with
+   * `.least`.
    *
    * @name least
    * @alias gte
+   * @alias greaterThanOrEqual
    * @param {Number} n
    * @param {String} msg _optional_
    * @namespace BDD
@@ -4186,6 +4195,7 @@ module.exports = function (chai, _) {
 
   Assertion.addMethod('least', assertLeast);
   Assertion.addMethod('gte', assertLeast);
+  Assertion.addMethod('greaterThanOrEqual', assertLeast);
 
   /**
    * ### .below(n[, msg])
@@ -4323,10 +4333,12 @@ module.exports = function (chai, _) {
    *     expect(2).to.be.at.most(1, 'nooo why fail??');
    *     expect(2, 'nooo why fail??').to.be.at.most(1);
    *
-   * The alias `.lte` can be used interchangeably with `.most`.
+   * The aliases `.lte` and `.lessThanOrEqual` can be used interchangeably with
+   * `.most`.
    *
    * @name most
    * @alias lte
+   * @alias lessThanOrEqual
    * @param {Number} n
    * @param {String} msg _optional_
    * @namespace BDD
@@ -4392,6 +4404,7 @@ module.exports = function (chai, _) {
 
   Assertion.addMethod('most', assertMost);
   Assertion.addMethod('lte', assertMost);
+  Assertion.addMethod('lessThanOrEqual', assertMost);
 
   /**
    * ### .within(start, finish[, msg])
@@ -6032,7 +6045,8 @@ module.exports = function (chai, _) {
     var expected = flag(this, 'object')
       , flagMsg = flag(this, 'message')
       , ssfi = flag(this, 'ssfi')
-      , contains = flag(this, 'contains');
+      , contains = flag(this, 'contains')
+      , isDeep = flag(this, 'deep');
     new Assertion(list, flagMsg, ssfi, true).to.be.an('array');
 
     if (contains) {
@@ -6044,13 +6058,23 @@ module.exports = function (chai, _) {
         , expected
       );
     } else {
-      this.assert(
-        list.indexOf(expected) > -1
-        , 'expected #{this} to be one of #{exp}'
-        , 'expected #{this} to not be one of #{exp}'
-        , list
-        , expected
-      );
+      if (isDeep) {
+        this.assert(
+          list.some(function(possibility) { return _.eql(expected, possibility) })
+          , 'expected #{this} to deeply equal one of #{exp}'
+          , 'expected #{this} to deeply equal one of #{exp}'
+          , list
+          , expected
+        );
+      } else {
+        this.assert(
+          list.indexOf(expected) > -1
+          , 'expected #{this} to be one of #{exp}'
+          , 'expected #{this} to not be one of #{exp}'
+          , list
+          , expected
+        );
+      }
     }
   }
 
@@ -8973,7 +8997,7 @@ module.exports = function (chai, util) {
    * Asserts that `set1` and `set2` have the same members in the same order.
    * Uses a deep equality check.
    *
-   * assert.sameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 }, { c: 3 } ], 'same deep ordered members');
+   *     assert.sameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 }, { c: 3 } ], 'same deep ordered members');
    *
    * @name sameDeepOrderedMembers
    * @param {Array} set1
@@ -8994,8 +9018,8 @@ module.exports = function (chai, util) {
    * Asserts that `set1` and `set2` don't have the same members in the same
    * order. Uses a deep equality check.
    *
-   * assert.notSameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 }, { z: 5 } ], 'not same deep ordered members');
-   * assert.notSameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { a: 1 }, { c: 3 } ], 'not same deep ordered members');
+   *     assert.notSameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 }, { z: 5 } ], 'not same deep ordered members');
+   *     assert.notSameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { a: 1 }, { c: 3 } ], 'not same deep ordered members');
    *
    * @name notSameDeepOrderedMembers
    * @param {Array} set1
@@ -9415,7 +9439,7 @@ module.exports = function (chai, util) {
   }
 
   /**
-   * ### .increasesButNotBy(function, object, property, [message])
+   * ### .increasesButNotBy(function, object, property, delta, [message])
    *
    * Asserts that a function does not increase a numeric object property or function's return value by an amount (delta).
    *
@@ -9545,7 +9569,7 @@ module.exports = function (chai, util) {
    *     var fn = function() { obj.val = 5 };
    *     assert.doesNotDecreaseBy(fn, obj, 'val', 1);
    *
-   * @name doesNotDecrease
+   * @name doesNotDecreaseBy
    * @param {Function} modifier function
    * @param {Object} object or getter function
    * @param {String} property name _optional_
@@ -11233,6 +11257,9 @@ function formatPrimitive(ctx, value) {
 
     case 'symbol':
       return ctx.stylize(value.toString(), 'symbol');
+
+    case 'bigint':
+      return ctx.stylize(value.toString() + 'n', 'bigint');
   }
   // For some reason typeof null is "object", so special case here.
   if (value === null) {

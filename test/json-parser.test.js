@@ -37,12 +37,12 @@ function TestParser(myValue, nameTypeOf, compare, jsonparse) {
 }
 
 function TestTypeOf(myValue, nameTypeOf, compare) {
-  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
-  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
+  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
+  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
   // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
-  TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
+  // TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   // TestParser(JSON);
 }
 
