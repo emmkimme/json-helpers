@@ -36,9 +36,10 @@ exports.BufferBinaryJSONFormatter = {
 exports.Uint8ArrayJSONFormatter = {
     objectType: 'Uint8Array',
     objectConstructor: Uint8Array,
-    serialize: (t) => Array.apply([], this),
+    serialize: (t) => Buffer.from(t.buffer).toString('binary'),
     unserialize: (data) => {
-        return new Uint8Array(data);
+        const buffer = Buffer.from(data, 'binary');
+        return new Uint8Array(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
     }
 };
 
@@ -208,7 +209,7 @@ class JSONReplacerInstanceOfImpl {
         if (typeof key === 'undefined') {
             return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
-        if (value && value.constructor) {
+        if ((typeof value === 'object') && value && value.constructor) {
             const objectClass = getObjectClass(value.constructor);
             if (objectClass) {
                 const format = this._jsonReplacerSetupsMap.get(objectClass);
@@ -272,36 +273,32 @@ class JSONReplacerSetup {
         const objectConstructor = this.objectConstructor;
         this._toOriginalDescriptor = findFunctionPrototype(objectConstructor, 'toJSON');
         if (this._toOriginalDescriptor == null) {
-            this.toJSONPrototype = objectConstructor.prototype;
-            this._toOriginalDescriptor = findFunctionPrototype(objectConstructor, 'toString');
-            if (this._toOriginalDescriptor == null) {
-                this._toOriginalDescriptor[0] = objectConstructor.prototype;
-                this._toOriginalDescriptor[1] = {
-                    value: function () {
-                        return this.toString();
-                    },
+            this._toOriginalDescriptor = [
+                objectConstructor.prototype,
+                {
+                    value: undefined,
                     configurable: true,
                     enumerable: false,
                     writable: true
-                };
-            }
+                }
+            ];
         }
-        else {
-            this.toJSONPrototype = this._toOriginalDescriptor[0];
+        if (this.serialize) {
+            const self = this;
+            this._toJSONDescriptor = {
+                value: function () {
+                    return { type: self.objectType, data: self.serialize(this) };
+                },
+                configurable: true,
+                enumerable: false,
+                writable: true
+            };
         }
     }
     install() {
-        if (this.toJSONPrototype) {
+        if (this.serialize) {
             try {
-                const self = this;
-                Object.defineProperty(this.toJSONPrototype, 'toJSON', {
-                    value: function () {
-                        return { type: self.objectType, data: self.serialize(this) };
-                    },
-                    configurable: true,
-                    enumerable: false,
-                    writable: true
-                });
+                Object.defineProperty(this._toOriginalDescriptor[0], 'toJSON', this._toJSONDescriptor);
             }
             catch (err) {
                 console.error(`${err}`);
@@ -309,7 +306,7 @@ class JSONReplacerSetup {
         }
     }
     uninstall() {
-        if (this.toJSONPrototype) {
+        if (this.serialize) {
             try {
                 Object.defineProperty(this._toOriginalDescriptor[0], 'toJSON', this._toOriginalDescriptor[1]);
             }
@@ -327,10 +324,10 @@ class JSONReplacerToJSONImpl {
     replacer(replacer) {
         const setup = new JSONReplacerSetup(replacer);
         if (replacer.serialize) {
-            this._jsonReplacerSetupsMap.set(setup.toJSONPrototype, setup);
+            this._jsonReplacerSetupsMap.set(setup.objectConstructor, setup);
         }
         else {
-            this._jsonReplacerSetupsMap.delete(setup.toJSONPrototype);
+            this._jsonReplacerSetupsMap.delete(setup.objectConstructor);
         }
     }
     _replacer(key, value) {
@@ -22040,11 +22037,12 @@ function TestParser(myValue, nameTypeOf, compare, jsonparse) {
 }
 
 function TestTypeOf(myValue, nameTypeOf, compare) {
-  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
-  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
-  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
+  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
+  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
+  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
+  TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   // TestParser(JSON);
 }
 
@@ -22093,9 +22091,9 @@ const uint8Array = {
 }
 
 describe('JSONParser', () => {
-  // describe('buffer json', () => {
-  //   TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
-  // });
+  describe('buffer json', () => {
+    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+  });
 
   describe('Uint8Array json', () => {
     TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.toString() === r2.toString());
@@ -22106,28 +22104,28 @@ describe('JSONParser', () => {
   //   TestTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
   // });
 
-  // describe('Error json', () => {
-  //   let myError = new Error();
-  //   TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
-  // });
+  describe('Error json', () => {
+    let myError = new Error();
+    TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+  });
 
-  // describe('TypeError json', () => {
-  //   let myError = new TypeError();
-  //   TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  // });
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
 
-  // describe('TypeError json', () => {
-  //   let myError = new TypeError();
-  //   TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  // });
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
 
-  // describe('big json', () => {
-  //   TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  // });
+  describe('big json', () => {
+    TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
 
-  // describe('complex json', () => {
-  //   TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  // });
+  describe('complex json', () => {
+    TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
 });
 
 describe('IsJSONLike', () => {

@@ -37,11 +37,12 @@ function TestParser(myValue, nameTypeOf, compare, jsonparse) {
 }
 
 function TestTypeOf(myValue, nameTypeOf, compare) {
-  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
-  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
-  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
+  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
+  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
+  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
+  TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   // TestParser(JSON);
 }
 
@@ -90,9 +91,9 @@ const uint8Array = {
 }
 
 describe('JSONParser', () => {
-  // describe('buffer json', () => {
-  //   TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
-  // });
+  describe('buffer json', () => {
+    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+  });
 
   describe('Uint8Array json', () => {
     TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.toString() === r2.toString());
@@ -103,28 +104,28 @@ describe('JSONParser', () => {
   //   TestTypeOf(myDate, "Date", (r1, r2) => r1.valueOf() == r2.valueOf());
   // });
 
-  // describe('Error json', () => {
-  //   let myError = new Error();
-  //   TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
-  // });
+  describe('Error json', () => {
+    let myError = new Error();
+    TestTypeOf(myError, "Error", (r1, r2) => r1.message == r2.message);
+  });
 
-  // describe('TypeError json', () => {
-  //   let myError = new TypeError();
-  //   TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  // });
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
 
-  // describe('TypeError json', () => {
-  //   let myError = new TypeError();
-  //   TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
-  // });
+  describe('TypeError json', () => {
+    let myError = new TypeError();
+    TestTypeOf(myError, "TypeError", (r1, r2) => r1.message == r2.message);
+  });
 
-  // describe('big json', () => {
-  //   TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  // });
+  describe('big json', () => {
+    TestTypeOf(bigJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
 
-  // describe('complex json', () => {
-  //   TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
-  // });
+  describe('complex json', () => {
+    TestTypeOf(complexJSON, "object", (r1, r2) => ObjectEqual(r1, r2));
+  });
 });
 
 describe('IsJSONLike', () => {

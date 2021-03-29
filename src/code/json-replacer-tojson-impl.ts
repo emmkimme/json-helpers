@@ -27,9 +27,8 @@ class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
     // objectInstance: T;
     objectConstructor: ObjectConstructor;
     serialize: (t: T) => any;
-    toJSONPrototype: Object;
-    toStringPrototype: Object;
-
+    
+    protected _toJSONDescriptor: PropertyDescriptor;
     protected _toOriginalDescriptor: [any, PropertyDescriptor];
 
     constructor(replacer: JSONReplacerData<T>) {
@@ -42,38 +41,35 @@ class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
         const objectConstructor = this.objectConstructor;
         this._toOriginalDescriptor = findFunctionPrototype(objectConstructor, 'toJSON');
         if (this._toOriginalDescriptor == null) {
-            this.toJSONPrototype = objectConstructor.prototype;
-            this._toOriginalDescriptor = findFunctionPrototype(objectConstructor, 'toString');
-            if (this._toOriginalDescriptor == null) {
-                this._toOriginalDescriptor[0] = objectConstructor.prototype;
-                this._toOriginalDescriptor[1] = {
-                    value: function (): any {
-                        return this.toString();
-                    },
+            this._toOriginalDescriptor = [
+                objectConstructor.prototype,
+                {
+                    value: undefined,
                     configurable: true,
                     enumerable: false,
                     writable: true
-                };
-            }
+                }
+            ];
         }
-        else {
-            this.toJSONPrototype = this._toOriginalDescriptor[0];
+
+        if (this.serialize) {
+            const self = this;
+            this._toJSONDescriptor = {
+                // Beware the 'this' context is the object instance itself
+                value: function (): any {
+                    return { type: self.objectType, data: self.serialize(this as T) };
+                },
+                configurable: true,
+                enumerable: false,
+                writable: true
+            };
         }
     }
 
     install() {
-        if (this.toJSONPrototype) {
+        if (this.serialize) {
             try {
-                const self = this;
-                Object.defineProperty(this.toJSONPrototype, 'toJSON', {
-                    // Beware the 'this' context is the object instance itself
-                    value: function (): any {
-                        return { type: self.objectType, data: self.serialize(this) };
-                    },
-                    configurable: true,
-                    enumerable: false,
-                    writable: true
-                });
+                Object.defineProperty(this._toOriginalDescriptor[0], 'toJSON', this._toJSONDescriptor);
             }
             catch (err) {
                 console.error(`${err}`);
@@ -82,7 +78,7 @@ class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
     }
 
     uninstall() {
-        if (this.toJSONPrototype) {
+        if (this.serialize) {
             try {
                 Object.defineProperty(this._toOriginalDescriptor[0], 'toJSON', this._toOriginalDescriptor[1]);
             }
@@ -127,10 +123,10 @@ export class JSONReplacerToJSONImpl implements JSONReplacer {
     replacer<T>(replacer: JSONReplacerData<T>) {
         const setup = new JSONReplacerSetup<T>(replacer);
         if (replacer.serialize) {
-            this._jsonReplacerSetupsMap.set(setup.toJSONPrototype, setup);
+            this._jsonReplacerSetupsMap.set(setup.objectConstructor, setup);
         }
         else {
-            this._jsonReplacerSetupsMap.delete(setup.toJSONPrototype);
+            this._jsonReplacerSetupsMap.delete(setup.objectConstructor);
         }
     }
 

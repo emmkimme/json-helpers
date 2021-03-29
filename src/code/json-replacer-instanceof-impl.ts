@@ -82,7 +82,7 @@ export class JSONReplacerInstanceOfImpl implements JSONReplacer {
         if (typeof key === 'undefined') {
             return ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
-        if (value && value.constructor) {
+        if ((typeof value === 'object') && value && value.constructor) {
             const objectClass = getObjectClass(value.constructor);
             if (objectClass) {
                 const format = this._jsonReplacerSetupsMap.get(objectClass);

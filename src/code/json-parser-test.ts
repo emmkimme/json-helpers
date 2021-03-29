@@ -1,17 +1,18 @@
 import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJSONFormatter, Uint8ArrayJSONFormatter } from './json-formatter-default';
 import { JSONParserImpl } from './json-parser-impl';
 import type { JSONParserInterface } from './json-parser';
-import { JSONReplacerInstanceOfImpl } from './json-replacer-instanceof-impl';
+import { JSONReplacerInstanceOfImpl as JSONReplacerTestInstance } from './json-replacer-instanceof-impl';
+// import { JSONReplacerPrototypeImpl as JSONReplacerTestInstance } from './json-replacer-prototype-impl';
 import type { JSONFormatterData } from './json-formatter';
 
 // Purpose is to manage 'undefined', 'Buffer' and 'Date'
 class JSONParserTestImpl extends JSONParserImpl {
-    protected _jsonReplacerInstanceOf: JSONReplacerInstanceOfImpl;
+    protected _jsonReplacerInstanceOf: JSONReplacerTestInstance;
 
     constructor() {
         super();
 
-        this._jsonReplacerInstanceOf = new JSONReplacerInstanceOfImpl();
+        this._jsonReplacerInstanceOf = new JSONReplacerTestInstance();
 
         this.formatter<Date>(DateJSONFormatter);
         this.formatter<Error>(ErrorJSONFormatter);
