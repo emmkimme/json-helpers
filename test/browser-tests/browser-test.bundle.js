@@ -44,7 +44,7 @@ exports.Uint8ArrayJSONFormatter = {
 };
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":14}],2:[function(require,module,exports){
+},{"buffer":12}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONParserImpl = void 0;
@@ -80,34 +80,7 @@ class JSONParserImpl {
 }
 exports.JSONParserImpl = JSONParserImpl;
 
-},{"./json-replacer-tojson-impl":8,"./json-reviver-impl":9}],3:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONParserTest = void 0;
-const json_formatter_default_1 = require("./json-formatter-default");
-const json_parser_impl_1 = require("./json-parser-impl");
-const json_replacer_instanceof_impl_1 = require("./json-replacer-instanceof-impl");
-class JSONParserTestImpl extends json_parser_impl_1.JSONParserImpl {
-    constructor() {
-        super();
-        this._jsonReplacerInstanceOf = new json_replacer_instanceof_impl_1.JSONReplacerInstanceOfImpl();
-        this.formatter(json_formatter_default_1.DateJSONFormatter);
-        this.formatter(json_formatter_default_1.ErrorJSONFormatter);
-        this.formatter(json_formatter_default_1.TypeErrorJSONFormatter);
-        this.formatter(json_formatter_default_1.BufferJSONFormatter);
-        this.formatter(json_formatter_default_1.Uint8ArrayJSONFormatter);
-    }
-    formatter(jsonFormatter) {
-        super.formatter(jsonFormatter);
-        this._jsonReplacerInstanceOf.replacer(jsonFormatter);
-    }
-    stringify(value, replacer, space) {
-        return this._jsonReplacerInstanceOf.stringify(value, replacer, space);
-    }
-}
-exports.JSONParserTest = new JSONParserTestImpl();
-
-},{"./json-formatter-default":1,"./json-parser-impl":2,"./json-replacer-instanceof-impl":7}],4:[function(require,module,exports){
+},{"./json-replacer-tojson-impl":6,"./json-reviver-impl":7}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONParser = exports.JSONParserV1 = void 0;
@@ -126,7 +99,7 @@ class JSONParserV1Impl extends json_parser_impl_1.JSONParserImpl {
 exports.JSONParserV1 = new JSONParserV1Impl();
 exports.JSONParser = exports.JSONParserV1;
 
-},{"./json-formatter-default":1,"./json-parser-impl":2}],5:[function(require,module,exports){
+},{"./json-formatter-default":1,"./json-parser-impl":2}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONParserV2 = void 0;
@@ -144,7 +117,7 @@ class JSONParserV2Impl extends json_parser_impl_1.JSONParserImpl {
 }
 exports.JSONParserV2 = new JSONParserV2Impl();
 
-},{"./json-formatter-default":1,"./json-parser-impl":2}],6:[function(require,module,exports){
+},{"./json-formatter-default":1,"./json-parser-impl":2}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IsJSONLike = exports.ToJSONConstants = void 0;
@@ -157,92 +130,7 @@ function IsJSONLike(obj) {
 }
 exports.IsJSONLike = IsJSONLike;
 
-},{}],7:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONReplacerInstanceOfImpl = void 0;
-const json_parser_1 = require("./json-parser");
-function getObjectClass(constructor) {
-    if (typeof constructor === 'function') {
-        if (constructor.name) {
-            return constructor.name;
-        }
-        const str = constructor.toString();
-        if (str.charAt(0) == '[') {
-            return str.subst(8, str.length - 1);
-        }
-        else {
-            const arr = str.match(/function\s*(\w+)/);
-            if (arr && arr.length == 2) {
-                return arr[1];
-            }
-        }
-    }
-    return null;
-}
-class JSONReplacerSetup {
-    constructor(replacer) {
-        this.objectType = replacer.objectType;
-        this.objectConstructor = replacer.objectConstructor;
-        this.serialize = replacer.serialize;
-        this.objectClass = getObjectClass(this.objectConstructor);
-    }
-    toJSON(obj) {
-        return { type: this.objectType, data: this.serialize(obj) };
-    }
-}
-class JSONReplacerInstanceOfImpl {
-    constructor() {
-        this._jsonReplacerSetupsMap = new Map();
-        this._replacer = this._replacer.bind(this);
-    }
-    replacer(replacer) {
-        const setup = new JSONReplacerSetup(replacer);
-        if (replacer.serialize) {
-            this._jsonReplacerSetupsMap.set(setup.objectClass, setup);
-        }
-        else {
-            this._jsonReplacerSetupsMap.delete(setup.objectClass);
-        }
-    }
-    _replacer(key, value) {
-        if (typeof key === 'undefined') {
-            return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        if ((typeof value === 'object') && value && value.constructor) {
-            const objectClass = getObjectClass(value.constructor);
-            if (objectClass) {
-                const format = this._jsonReplacerSetupsMap.get(objectClass);
-                if (format) {
-                    return format.toJSON(value);
-                }
-            }
-        }
-        return value;
-    }
-    _replacerChain(replacer, key, value) {
-        if (typeof key === 'undefined') {
-            return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        if (value && value.constructor) {
-            const objectClass = getObjectClass(value.constructor);
-            if (objectClass) {
-                const format = this._jsonReplacerSetupsMap.get(objectClass);
-                if (format) {
-                    return format.toJSON(value);
-                }
-            }
-        }
-        return replacer(key, value);
-    }
-    stringify(value, replacer, space) {
-        const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;
-        return JSON.stringify(value, replacerCb, space);
-    }
-}
-exports.JSONReplacerInstanceOfImpl = JSONReplacerInstanceOfImpl;
-
-},{"./json-parser":6}],8:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReplacerToJSONImpl = void 0;
@@ -372,7 +260,7 @@ class JSONReplacerToJSONImpl {
 }
 exports.JSONReplacerToJSONImpl = JSONReplacerToJSONImpl;
 
-},{"./json-parser":6}],9:[function(require,module,exports){
+},{"./json-parser":5}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReviverImpl = void 0;
@@ -425,7 +313,7 @@ class JSONReviverImpl {
 }
 exports.JSONReviverImpl = JSONReviverImpl;
 
-},{"./json-parser":6}],10:[function(require,module,exports){
+},{"./json-parser":5}],8:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -440,7 +328,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./json-helpers-common"), exports);
 
-},{"./json-helpers-common":11}],11:[function(require,module,exports){
+},{"./json-helpers-common":9}],9:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -456,9 +344,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./code/json-parser"), exports);
 __exportStar(require("./code/json-parser-v1"), exports);
 __exportStar(require("./code/json-parser-v2"), exports);
-__exportStar(require("./code/json-parser-test"), exports);
 
-},{"./code/json-parser":6,"./code/json-parser-test":3,"./code/json-parser-v1":4,"./code/json-parser-v2":5}],12:[function(require,module,exports){
+},{"./code/json-parser":5,"./code/json-parser-v1":3,"./code/json-parser-v2":4}],10:[function(require,module,exports){
 /*!
  * assertion-error
  * Copyright(c) 2013 Jake Luer <jake@qualiancy.com>
@@ -576,7 +463,7 @@ AssertionError.prototype.toJSON = function (stack) {
   return props;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -728,7 +615,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],14:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -2509,10 +2396,10 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":13,"buffer":14,"ieee754":51}],15:[function(require,module,exports){
+},{"base64-js":11,"buffer":12,"ieee754":49}],13:[function(require,module,exports){
 module.exports = require('./lib/chai');
 
-},{"./lib/chai":16}],16:[function(require,module,exports){
+},{"./lib/chai":14}],14:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -2606,7 +2493,7 @@ exports.use(should);
 var assert = require('./chai/interface/assert');
 exports.use(assert);
 
-},{"./chai/assertion":17,"./chai/config":18,"./chai/core/assertions":19,"./chai/interface/assert":20,"./chai/interface/expect":21,"./chai/interface/should":22,"./chai/utils":37,"assertion-error":12}],17:[function(require,module,exports){
+},{"./chai/assertion":15,"./chai/config":16,"./chai/core/assertions":17,"./chai/interface/assert":18,"./chai/interface/expect":19,"./chai/interface/should":20,"./chai/utils":35,"assertion-error":10}],15:[function(require,module,exports){
 /*!
  * chai
  * http://chaijs.com
@@ -2783,7 +2670,7 @@ module.exports = function (_chai, util) {
   });
 };
 
-},{"./config":18}],18:[function(require,module,exports){
+},{"./config":16}],16:[function(require,module,exports){
 module.exports = {
 
   /**
@@ -2879,7 +2766,7 @@ module.exports = {
   proxyExcludedKeys: ['then', 'catch', 'inspect', 'toJSON']
 };
 
-},{}],19:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*!
  * chai
  * http://chaijs.com
@@ -6734,7 +6621,7 @@ module.exports = function (chai, _) {
   });
 };
 
-},{}],20:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -9849,7 +9736,7 @@ module.exports = function (chai, util) {
   ('isNotEmpty', 'notEmpty');
 };
 
-},{}],21:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -9898,7 +9785,7 @@ module.exports = function (chai, util) {
   };
 };
 
-},{}],22:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10119,7 +10006,7 @@ module.exports = function (chai, util) {
   chai.Should = loadShould;
 };
 
-},{}],23:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /*!
  * Chai - addChainingMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10273,7 +10160,7 @@ module.exports = function addChainableMethod(ctx, name, method, chainingBehavior
   });
 };
 
-},{"../../chai":16,"./addLengthGuard":24,"./flag":29,"./proxify":45,"./transferFlags":47}],24:[function(require,module,exports){
+},{"../../chai":14,"./addLengthGuard":22,"./flag":27,"./proxify":43,"./transferFlags":45}],22:[function(require,module,exports){
 var fnLengthDesc = Object.getOwnPropertyDescriptor(function () {}, 'length');
 
 /*!
@@ -10335,7 +10222,7 @@ module.exports = function addLengthGuard (fn, assertionName, isChainable) {
   return fn;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /*!
  * Chai - addMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10405,7 +10292,7 @@ module.exports = function addMethod(ctx, name, method) {
   ctx[name] = proxify(methodWrapper, name);
 };
 
-},{"../../chai":16,"./addLengthGuard":24,"./flag":29,"./proxify":45,"./transferFlags":47}],26:[function(require,module,exports){
+},{"../../chai":14,"./addLengthGuard":22,"./flag":27,"./proxify":43,"./transferFlags":45}],24:[function(require,module,exports){
 /*!
  * Chai - addProperty utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10479,7 +10366,7 @@ module.exports = function addProperty(ctx, name, getter) {
   });
 };
 
-},{"../../chai":16,"./flag":29,"./isProxyEnabled":40,"./transferFlags":47}],27:[function(require,module,exports){
+},{"../../chai":14,"./flag":27,"./isProxyEnabled":38,"./transferFlags":45}],25:[function(require,module,exports){
 /*!
  * Chai - compareByInspect utility
  * Copyright(c) 2011-2016 Jake Luer <jake@alogicalparadox.com>
@@ -10512,7 +10399,7 @@ module.exports = function compareByInspect(a, b) {
   return inspect(a) < inspect(b) ? -1 : 1;
 };
 
-},{"./inspect":38}],28:[function(require,module,exports){
+},{"./inspect":36}],26:[function(require,module,exports){
 /*!
  * Chai - expectTypes utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10565,7 +10452,7 @@ module.exports = function expectTypes(obj, types) {
   }
 };
 
-},{"./flag":29,"assertion-error":12,"type-detect":53}],29:[function(require,module,exports){
+},{"./flag":27,"assertion-error":10,"type-detect":51}],27:[function(require,module,exports){
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10600,7 +10487,7 @@ module.exports = function flag(obj, key, value) {
   }
 };
 
-},{}],30:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * Chai - getActual utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10622,7 +10509,7 @@ module.exports = function getActual(obj, args) {
   return args.length > 4 ? args[4] : obj._obj;
 };
 
-},{}],31:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*!
  * Chai - getEnumerableProperties utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10650,7 +10537,7 @@ module.exports = function getEnumerableProperties(object) {
   return result;
 };
 
-},{}],32:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /*!
  * Chai - message composition utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10702,7 +10589,7 @@ module.exports = function getMessage(obj, args) {
   return flagMsg ? flagMsg + ': ' + msg : msg;
 };
 
-},{"./flag":29,"./getActual":30,"./objDisplay":41}],33:[function(require,module,exports){
+},{"./flag":27,"./getActual":28,"./objDisplay":39}],31:[function(require,module,exports){
 var type = require('type-detect');
 
 var flag = require('./flag');
@@ -10759,7 +10646,7 @@ module.exports = function getOperator(obj, args) {
   return isObject ? 'deepStrictEqual' : 'strictEqual';
 };
 
-},{"./flag":29,"type-detect":53}],34:[function(require,module,exports){
+},{"./flag":27,"type-detect":51}],32:[function(require,module,exports){
 /*!
  * Chai - getOwnEnumerableProperties utility
  * Copyright(c) 2011-2016 Jake Luer <jake@alogicalparadox.com>
@@ -10790,7 +10677,7 @@ module.exports = function getOwnEnumerableProperties(obj) {
   return Object.keys(obj).concat(getOwnEnumerablePropertySymbols(obj));
 };
 
-},{"./getOwnEnumerablePropertySymbols":35}],35:[function(require,module,exports){
+},{"./getOwnEnumerablePropertySymbols":33}],33:[function(require,module,exports){
 /*!
  * Chai - getOwnEnumerablePropertySymbols utility
  * Copyright(c) 2011-2016 Jake Luer <jake@alogicalparadox.com>
@@ -10819,7 +10706,7 @@ module.exports = function getOwnEnumerablePropertySymbols(obj) {
   });
 };
 
-},{}],36:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
  * Chai - getProperties utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -10857,7 +10744,7 @@ module.exports = function getProperties(object) {
   return result;
 };
 
-},{}],37:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
@@ -11036,7 +10923,7 @@ exports.isNaN = require('./isNaN');
  */
 
 exports.getOperator = require('./getOperator');
-},{"./addChainableMethod":23,"./addLengthGuard":24,"./addMethod":25,"./addProperty":26,"./compareByInspect":27,"./expectTypes":28,"./flag":29,"./getActual":30,"./getMessage":32,"./getOperator":33,"./getOwnEnumerableProperties":34,"./getOwnEnumerablePropertySymbols":35,"./inspect":38,"./isNaN":39,"./isProxyEnabled":40,"./objDisplay":41,"./overwriteChainableMethod":42,"./overwriteMethod":43,"./overwriteProperty":44,"./proxify":45,"./test":46,"./transferFlags":47,"check-error":48,"deep-eql":49,"get-func-name":50,"pathval":52,"type-detect":53}],38:[function(require,module,exports){
+},{"./addChainableMethod":21,"./addLengthGuard":22,"./addMethod":23,"./addProperty":24,"./compareByInspect":25,"./expectTypes":26,"./flag":27,"./getActual":28,"./getMessage":30,"./getOperator":31,"./getOwnEnumerableProperties":32,"./getOwnEnumerablePropertySymbols":33,"./inspect":36,"./isNaN":37,"./isProxyEnabled":38,"./objDisplay":39,"./overwriteChainableMethod":40,"./overwriteMethod":41,"./overwriteProperty":42,"./proxify":43,"./test":44,"./transferFlags":45,"check-error":46,"deep-eql":47,"get-func-name":48,"pathval":50,"type-detect":51}],36:[function(require,module,exports){
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
@@ -11417,7 +11304,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
-},{"../config":18,"./getEnumerableProperties":31,"./getProperties":36,"get-func-name":50}],39:[function(require,module,exports){
+},{"../config":16,"./getEnumerableProperties":29,"./getProperties":34,"get-func-name":48}],37:[function(require,module,exports){
 /*!
  * Chai - isNaN utility
  * Copyright(c) 2012-2015 Sakthipriyan Vairamani <thechargingvolcano@gmail.com>
@@ -11445,7 +11332,7 @@ function isNaN(value) {
 // If ECMAScript 6's Number.isNaN is present, prefer that.
 module.exports = Number.isNaN || isNaN;
 
-},{}],40:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 var config = require('../config');
 
 /*!
@@ -11471,7 +11358,7 @@ module.exports = function isProxyEnabled() {
     typeof Reflect !== 'undefined';
 };
 
-},{"../config":18}],41:[function(require,module,exports){
+},{"../config":16}],39:[function(require,module,exports){
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11523,7 +11410,7 @@ module.exports = function objDisplay(obj) {
   }
 };
 
-},{"../config":18,"./inspect":38}],42:[function(require,module,exports){
+},{"../config":16,"./inspect":36}],40:[function(require,module,exports){
 /*!
  * Chai - overwriteChainableMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11594,7 +11481,7 @@ module.exports = function overwriteChainableMethod(ctx, name, method, chainingBe
   };
 };
 
-},{"../../chai":16,"./transferFlags":47}],43:[function(require,module,exports){
+},{"../../chai":14,"./transferFlags":45}],41:[function(require,module,exports){
 /*!
  * Chai - overwriteMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11688,7 +11575,7 @@ module.exports = function overwriteMethod(ctx, name, method) {
   ctx[name] = proxify(overwritingMethodWrapper, name);
 };
 
-},{"../../chai":16,"./addLengthGuard":24,"./flag":29,"./proxify":45,"./transferFlags":47}],44:[function(require,module,exports){
+},{"../../chai":14,"./addLengthGuard":22,"./flag":27,"./proxify":43,"./transferFlags":45}],42:[function(require,module,exports){
 /*!
  * Chai - overwriteProperty utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11782,7 +11669,7 @@ module.exports = function overwriteProperty(ctx, name, getter) {
   });
 };
 
-},{"../../chai":16,"./flag":29,"./isProxyEnabled":40,"./transferFlags":47}],45:[function(require,module,exports){
+},{"../../chai":14,"./flag":27,"./isProxyEnabled":38,"./transferFlags":45}],43:[function(require,module,exports){
 var config = require('../config');
 var flag = require('./flag');
 var getProperties = require('./getProperties');
@@ -11931,7 +11818,7 @@ function stringDistanceCapped(strA, strB, cap) {
   return memo[strA.length][strB.length];
 }
 
-},{"../config":18,"./flag":29,"./getProperties":36,"./isProxyEnabled":40}],46:[function(require,module,exports){
+},{"../config":16,"./flag":27,"./getProperties":34,"./isProxyEnabled":38}],44:[function(require,module,exports){
 /*!
  * Chai - test utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -11961,7 +11848,7 @@ module.exports = function test(obj, args) {
   return negate ? !expr : expr;
 };
 
-},{"./flag":29}],47:[function(require,module,exports){
+},{"./flag":27}],45:[function(require,module,exports){
 /*!
  * Chai - transferFlags utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -12008,7 +11895,7 @@ module.exports = function transferFlags(assertion, object, includeAll) {
   }
 };
 
-},{}],48:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 
 /* !
@@ -12182,7 +12069,7 @@ module.exports = {
   getConstructorName: getConstructorName,
 };
 
-},{}],49:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 'use strict';
 /* globals Symbol: false, Uint8Array: false, WeakMap: false */
 /*!
@@ -12639,7 +12526,7 @@ function isPrimitive(value) {
   return value === null || typeof value !== 'object';
 }
 
-},{"type-detect":53}],50:[function(require,module,exports){
+},{"type-detect":51}],48:[function(require,module,exports){
 'use strict';
 
 /* !
@@ -12685,7 +12572,7 @@ function getFuncName(aFunc) {
 
 module.exports = getFuncName;
 
-},{}],51:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -12772,7 +12659,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],52:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 
 /* !
@@ -13075,7 +12962,7 @@ module.exports = {
   setPathValue: setPathValue,
 };
 
-},{}],53:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 (function (global){(function (){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -13467,7 +13354,7 @@ return typeDetect;
 })));
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],54:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 module.exports=[
   {
     "_id": "5bf07ca4d97a2ccdd9a83feb",
@@ -22020,10 +21907,10 @@ module.exports=[
     "favoriteFruit": "banana"
   }
 ]
-},{}],55:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 require('../json-parser.test');
 
-},{"../json-parser.test":56}],56:[function(require,module,exports){
+},{"../json-parser.test":54}],54:[function(require,module,exports){
 (function (Buffer){(function (){
 const chai = require('chai');
 const assert = chai.assert;
@@ -22064,12 +21951,12 @@ function TestParser(myValue, nameTypeOf, compare, jsonparse) {
 }
 
 function TestTypeOf(myValue, nameTypeOf, compare) {
-  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
-  // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
+  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
+  TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
   // TestParser(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV1);
   TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserV2);
-  TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
+  // TestPerformance(myValue, nameTypeOf, compare, json_tools.JSONParserTest);
   // TestParser(JSON);
 }
 
@@ -22119,11 +22006,11 @@ const uint8Array = {
 
 describe('JSONParser', () => {
   describe('buffer json', () => {
-    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.myBuffer.compare(r2.myBuffer) === 0);
   });
 
   describe('Uint8Array json', () => {
-    TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.toString() === r2.toString());
+    TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.myUint8Array.toString() === r2.myUint8Array.toString());
   });
 
   // describe('Date json', () => {
@@ -22169,4 +22056,4 @@ describe('IsJSONLike', () => {
 
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../lib/json-helpers":10,"./big-data.json":54,"buffer":14,"chai":15}]},{},[55]);
+},{"../lib/json-helpers":8,"./big-data.json":52,"buffer":12,"chai":13}]},{},[53]);

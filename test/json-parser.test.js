@@ -92,11 +92,11 @@ const uint8Array = {
 
 describe('JSONParser', () => {
   describe('buffer json', () => {
-    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.compare(r2) === 0);
+    TestTypeOf(myBuffer, "Buffer", (r1, r2) => r1.myBuffer.compare(r2.myBuffer) === 0);
   });
 
   describe('Uint8Array json', () => {
-    TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.toString() === r2.toString());
+    TestTypeOf(uint8Array, "Uint8Array", (r1, r2) => r1.myUint8Array.toString() === r2.myUint8Array.toString());
   });
 
   // describe('Date json', () => {
