@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import type { JSONFormatterData } from './json-formatter';
 
 export const DateJSONFormatter: JSONFormatterData<globalThis.Date> = {
