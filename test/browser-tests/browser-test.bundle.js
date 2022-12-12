@@ -1,8 +1,8 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-(function (Buffer){(function (){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Uint8ArrayJSONFormatter = exports.BufferBinaryJSONFormatter = exports.BufferJSONFormatter = exports.TypeErrorJSONFormatter = exports.ErrorJSONFormatter = exports.DateJSONFormatter = void 0;
+const buffer_1 = require("buffer");
 exports.DateJSONFormatter = {
     objectType: 'Date',
     objectConstructor: globalThis.Date,
@@ -23,27 +23,26 @@ exports.TypeErrorJSONFormatter = {
 };
 exports.BufferJSONFormatter = {
     objectType: 'Buffer',
-    objectConstructor: Buffer,
+    objectConstructor: buffer_1.Buffer,
     serialize: null,
-    unserialize: (data) => Buffer.from(data)
+    unserialize: (data) => buffer_1.Buffer.from(data)
 };
 exports.BufferBinaryJSONFormatter = {
     objectType: 'Buffer',
-    objectConstructor: Buffer,
+    objectConstructor: buffer_1.Buffer,
     serialize: (t) => t.toString('binary'),
-    unserialize: (data) => Buffer.from(data, 'binary')
+    unserialize: (data) => buffer_1.Buffer.from(data, 'binary')
 };
 exports.Uint8ArrayJSONFormatter = {
     objectType: 'Uint8Array',
     objectConstructor: Uint8Array,
-    serialize: (t) => Buffer.from(t.buffer).toString('binary'),
+    serialize: (t) => buffer_1.Buffer.from(t.buffer).toString('binary'),
     unserialize: (data) => {
-        const buffer = Buffer.from(data, 'binary');
+        const buffer = buffer_1.Buffer.from(data, 'binary');
         return new Uint8Array(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
     }
 };
 
-}).call(this)}).call(this,require("buffer").Buffer)
 },{"buffer":12}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
