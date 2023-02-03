@@ -35,7 +35,7 @@ function getObjectClass(constructor: any): string | null {
 }
 
 
-// Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
+// Purpose is to manage 'Buffer', 'Date', 'Error', 'TypeError'
 class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
     objectType: string;
     // objectInstance: T;
@@ -78,10 +78,7 @@ export class JSONReplacerInstanceOfImpl implements JSONReplacer {
         }
     }
 
-    private _replacer(key: string, value: any): any {
-        if (typeof key === 'undefined') {
-            return ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
+    private _replacer(_key: string, value: any): any {
         if ((typeof value === 'object') && value && value.constructor) {
             const objectClass = getObjectClass(value.constructor);
             if (objectClass) {
@@ -95,9 +92,6 @@ export class JSONReplacerInstanceOfImpl implements JSONReplacer {
     }
 
     private _replacerChain(replacer: (key: string, value: any) => any, key: string, value: any) {
-        if (typeof key === 'undefined') {
-            return ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
         if (value && value.constructor) {
             const objectClass = getObjectClass(value.constructor);
             if (objectClass) {

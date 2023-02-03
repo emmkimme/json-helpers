@@ -2,7 +2,7 @@ import { DateJSONFormatter, ErrorJSONFormatter, TypeErrorJSONFormatter, BufferJS
 import { JSONParserImpl } from './json-parser-impl';
 import type { JSONParserInterface } from './json-parser';
 
-// Purpose is to manage 'undefined', 'Buffer' and 'Date'
+// Purpose is to manage 'Buffer' and 'Date'
 class JSONParserV1Impl extends JSONParserImpl {
     constructor() {
         super();

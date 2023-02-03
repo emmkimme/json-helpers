@@ -5,7 +5,7 @@ import { JSONReplacerInstanceOfImpl as JSONReplacerTestInstance } from './json-r
 // import { JSONReplacerPrototypeImpl as JSONReplacerTestInstance } from './json-replacer-prototype-impl';
 import type { JSONFormatterData } from './json-formatter';
 
-// Purpose is to manage 'undefined', 'Buffer' and 'Date'
+// Purpose is to manage 'Buffer' and 'Date'
 class JSONParserTestImpl extends JSONParserImpl {
     protected _jsonReplacerInstanceOf: JSONReplacerTestInstance;
 

@@ -1,5 +1,4 @@
 import type { JSONReplacer } from './json-parser';
-import { ToJSONConstants } from './json-parser';
 import type { JSONReplacerData } from './json-formatter';
 
 function findFunctionPrototype(objectConstructor: Function, name: string): [any, PropertyDescriptor] | null {
@@ -21,7 +20,7 @@ function findFunctionPrototype(objectConstructor: Function, name: string): [any,
     return null;
 }
 
-// Purpose is to manage 'undefined', 'Buffer', 'Date', 'Error', 'TypeError'
+// Purpose is to manage 'Buffer', 'Date', 'Error', 'TypeError'
 class JSONReplacerSetup<T extends Object> implements JSONReplacerData<T> {
     objectType: string;
     // objectInstance: T;
@@ -115,9 +114,6 @@ export class JSONReplacerToJSONImpl implements JSONReplacer {
     constructor() {
         this._jsonReplacerSetupsMap = new Map<Object, JSONReplacerSetup<any>>();
         this._installed = 0;
-
-        // callback
-        this._replacer = this._replacer.bind(this)
     }
 
     replacer<T>(replacer: JSONReplacerData<T>) {
@@ -128,20 +124,6 @@ export class JSONReplacerToJSONImpl implements JSONReplacer {
         else {
             this._jsonReplacerSetupsMap.delete(setup.objectConstructor);
         }
-    }
-
-    private _replacer(key: string, value: any): any {
-        if (typeof key === 'undefined') {
-            return ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        return value;
-    }
-
-    private _replacerChain(replacer: (key: string, value: any) => any, key: string, value: any) {
-        if (typeof key === 'undefined') {
-            return ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        return replacer(key, value);
     }
 
     install(): void {
@@ -163,8 +145,7 @@ export class JSONReplacerToJSONImpl implements JSONReplacer {
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
         try {
             this.install();
-            const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;
-            const result = JSON.stringify(value, replacerCb, space);
+            const result = JSON.stringify(value, replacer, space);
             this.uninstall();
             return result;
         }

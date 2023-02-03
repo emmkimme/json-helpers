@@ -1,9 +1,5 @@
 import type { JSONFormatterData, JSONReplacerData, JSONReviverData } from "./json-formatter";
 
-export namespace ToJSONConstants {
-    export const JSON_TOKEN_UNDEFINED = '_/undefined/_';
-}
-
 export interface JSONLike {
     stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string;
     parse(text: string, reviver?: (key: string, value: any) => any): any;

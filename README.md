@@ -1,5 +1,5 @@
 # json-helpers
-Provide a JSON stringify/parser able to manage 'undefined', 'Date', 'Uint8Array' and 'Buffer'.
+Provide a JSON stringify/parser able to manage 'Date', 'Uint8Array' and 'Buffer'.
 You can add your own class formatter.
 
 This parser is pretty efficient as using the standard JSON implementation, just overriding the 'toJSON' methods of classes.  
@@ -29,9 +29,8 @@ const busEvent = {
           pid: 2000,
           rid: 2,
           wcid: 10,
-          testUndefined: undefined
         },
-        testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"],
+        testArray: [12, "str", 3, null, new Date(), "end"],
         testBuffer: Buffer.from('ceci est un test')
       },
       request: {

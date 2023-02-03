@@ -1,5 +1,4 @@
 import type { JSONReviver } from './json-parser';
-import { ToJSONConstants } from './json-parser';
 import type { JSONReviverData } from './json-formatter';
 
 /** @internal */
@@ -24,9 +23,6 @@ export class JSONReviverImpl implements JSONReviver {
    
     private _reviver(key: string, value: any) {
         if (value) {
-            if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
-            }
             // Is it JSONFormatter ? - duck typing
             if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
@@ -40,9 +36,6 @@ export class JSONReviverImpl implements JSONReviver {
     
     private _reviverChain(reviver: (key: string, value: any) => any, key: string, value: any): any {
         if (value) {
-            if (value === ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
-            }
             // Is it JSONFormatter ? - duck typing
             if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);

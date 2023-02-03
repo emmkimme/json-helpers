@@ -5,7 +5,8 @@ const expect = chai.expect;
 const json_tools = require('../lib/json-helpers');
 
 function ObjectEqual(a1, a2) {
-  return JSON.stringify(a1) === JSON.stringify(a2);
+  expect(a1).to.be.deep.eq(a2);
+  return true;
 }
 
 function TestPerformance(myValue, nameTypeOf, compare, jsonparse) {
@@ -77,9 +78,8 @@ const complexJSON = {
       pid: 2000,
       rid: 2,
       wcid: 10,
-      testUndefined: undefined
     },
-    testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
+    testArray: [12, "str", 3, null, new Date(), "end"]
   },
   request: {
     replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',

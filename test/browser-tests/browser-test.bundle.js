@@ -119,11 +119,7 @@ exports.JSONParserV2 = new JSONParserV2Impl();
 },{"./json-formatter-default":1,"./json-parser-impl":2}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IsJSONLike = exports.ToJSONConstants = void 0;
-var ToJSONConstants;
-(function (ToJSONConstants) {
-    ToJSONConstants.JSON_TOKEN_UNDEFINED = '_/undefined/_';
-})(ToJSONConstants = exports.ToJSONConstants || (exports.ToJSONConstants = {}));
+exports.IsJSONLike = void 0;
 function IsJSONLike(obj) {
     return ((typeof obj === 'object') && obj.stringify && obj.parse);
 }
@@ -133,7 +129,6 @@ exports.IsJSONLike = IsJSONLike;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReplacerToJSONImpl = void 0;
-const json_parser_1 = require("./json-parser");
 function findFunctionPrototype(objectConstructor, name) {
     let proto = objectConstructor.prototype;
     let toJSONDescriptor = Object.getOwnPropertyDescriptor(proto, name);
@@ -206,7 +201,6 @@ class JSONReplacerToJSONImpl {
     constructor() {
         this._jsonReplacerSetupsMap = new Map();
         this._installed = 0;
-        this._replacer = this._replacer.bind(this);
     }
     replacer(replacer) {
         const setup = new JSONReplacerSetup(replacer);
@@ -216,18 +210,6 @@ class JSONReplacerToJSONImpl {
         else {
             this._jsonReplacerSetupsMap.delete(setup.objectConstructor);
         }
-    }
-    _replacer(key, value) {
-        if (typeof key === 'undefined') {
-            return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        return value;
-    }
-    _replacerChain(replacer, key, value) {
-        if (typeof key === 'undefined') {
-            return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
-        }
-        return replacer(key, value);
     }
     install() {
         if (this._installed++ === 0) {
@@ -246,8 +228,7 @@ class JSONReplacerToJSONImpl {
     stringify(value, replacer, space) {
         try {
             this.install();
-            const replacerCb = replacer ? this._replacerChain.bind(this, replacer) : this._replacer;
-            const result = JSON.stringify(value, replacerCb, space);
+            const result = JSON.stringify(value, replacer, space);
             this.uninstall();
             return result;
         }
@@ -259,11 +240,10 @@ class JSONReplacerToJSONImpl {
 }
 exports.JSONReplacerToJSONImpl = JSONReplacerToJSONImpl;
 
-},{"./json-parser":5}],7:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONReviverImpl = void 0;
-const json_parser_1 = require("./json-parser");
 class JSONReviverImpl {
     constructor() {
         this._jsonReviversMap = new Map();
@@ -279,9 +259,6 @@ class JSONReviverImpl {
     }
     _reviver(key, value) {
         if (value) {
-            if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
-            }
             if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
                 if (format) {
@@ -293,9 +270,6 @@ class JSONReviverImpl {
     }
     _reviverChain(reviver, key, value) {
         if (value) {
-            if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
-            }
             if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
                 if (format) {
@@ -312,7 +286,7 @@ class JSONReviverImpl {
 }
 exports.JSONReviverImpl = JSONReviverImpl;
 
-},{"./json-parser":5}],8:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -21990,9 +21964,8 @@ const complexJSON = {
       pid: 2000,
       rid: 2,
       wcid: 10,
-      testUndefined: undefined
     },
-    testArrayUndefined: [12, "str", undefined, 3, null, new Date(), "end"]
+    testArray: [12, "str", 3, null, new Date(), "end"]
   },
   request: {
     replyChannel: '/electron-common-ipc/myChannel/myRequest/replyChannel',
