@@ -130,15 +130,15 @@ export class JSONReplacerToJSONImpl implements JSONReplacer {
         }
     }
 
-    private _replacer(key: string, value: any): any {
-        if (typeof key === 'undefined') {
+    private _replacer(_key: string, value: any): any {
+        if (typeof value === 'undefined') {
             return ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return value;
     }
 
     private _replacerChain(replacer: (key: string, value: any) => any, key: string, value: any) {
-        if (typeof key === 'undefined') {
+        if (typeof value === 'undefined') {
             return ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return replacer(key, value);

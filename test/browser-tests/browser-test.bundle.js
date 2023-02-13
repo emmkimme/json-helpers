@@ -217,14 +217,14 @@ class JSONReplacerToJSONImpl {
             this._jsonReplacerSetupsMap.delete(setup.objectConstructor);
         }
     }
-    _replacer(key, value) {
-        if (typeof key === 'undefined') {
+    _replacer(_key, value) {
+        if (typeof value === 'undefined') {
             return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return value;
     }
     _replacerChain(replacer, key, value) {
-        if (typeof key === 'undefined') {
+        if (typeof value === 'undefined') {
             return json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED;
         }
         return replacer(key, value);
@@ -266,6 +266,7 @@ exports.JSONReviverImpl = void 0;
 const json_parser_1 = require("./json-parser");
 class JSONReviverImpl {
     constructor() {
+        this.hasUndefined = false;
         this._jsonReviversMap = new Map();
         this._reviver = this._reviver.bind(this);
     }
@@ -280,7 +281,8 @@ class JSONReviverImpl {
     _reviver(key, value) {
         if (value) {
             if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
+                this.hasUndefined = true;
+                return value;
             }
             if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
@@ -294,7 +296,8 @@ class JSONReviverImpl {
     _reviverChain(reviver, key, value) {
         if (value) {
             if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
-                return undefined;
+                this.hasUndefined = true;
+                return reviver(key, value);
             }
             if ((typeof value.type === 'string') && ('data' in value)) {
                 const format = this._jsonReviversMap.get(value.type);
@@ -307,7 +310,25 @@ class JSONReviverImpl {
     }
     parse(text, reviver) {
         const reviverCb = reviver ? this._reviverChain.bind(this, reviver) : this._reviver;
-        return JSON.parse(text, reviverCb);
+        const result = JSON.parse(text, reviverCb);
+        if (this.hasUndefined) {
+            this.insertUndefined(result);
+            this.hasUndefined = false;
+        }
+        return result;
+    }
+    insertUndefined(value, parent, key) {
+        if (Array.isArray(value)) {
+            value.forEach((itemValue, itemIndex) => this.insertUndefined(itemValue, value, itemIndex));
+        }
+        else if (typeof value === "object" && value !== null) {
+            Object.entries(value).forEach(([entryKey, entryValue]) => this.insertUndefined(entryValue, value, entryKey));
+        }
+        else if (parent !== undefined && key !== undefined) {
+            if (value === json_parser_1.ToJSONConstants.JSON_TOKEN_UNDEFINED) {
+                parent[key] = undefined;
+            }
+        }
     }
 }
 exports.JSONReviverImpl = JSONReviverImpl;
@@ -21918,7 +21939,8 @@ const expect = chai.expect;
 const json_tools = require('../lib/json-helpers');
 
 function ObjectEqual(a1, a2) {
-  return JSON.stringify(a1) === JSON.stringify(a2);
+  expect(a1).to.be.deep.eq(a2);
+  return true;
 }
 
 function TestPerformance(myValue, nameTypeOf, compare, jsonparse) {
